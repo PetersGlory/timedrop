@@ -1,8 +1,8 @@
 
 'use client';
 
-import { useState } from 'react';
-import { markets } from '@/lib/data';
+import { useState, useEffect } from 'react';
+import { getMarkets } from './account/api';
 import { MarketCard } from '@/components/market-card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import type { Market } from '@/lib/definitions';
@@ -38,6 +38,25 @@ const orderedCategories = [
 export default function MarketsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('All');
+  const [markets, setMarkets] = useState<Market[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function fetchMarkets() {
+      setLoading(true);
+      setError(null);
+      try {
+        const data = await getMarkets();
+        setMarkets(data.markets || []);
+      } catch (err: any) {
+        setError(err.message || 'Failed to load markets');
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchMarkets();
+  }, []);
 
   const activeMarkets = markets.filter(
     (market) => !isPast(new Date(market.endDate))
@@ -115,36 +134,42 @@ export default function MarketsPage() {
         </div>
       </header>
 
-      <Tabs
-        value={activeTab}
-        className="w-full"
-        onValueChange={setActiveTab}
-      >
-        <div className="overflow-x-auto pb-2">
-          <TabsList>
-            {availableCategories.map((category) => (
-              <TabsTrigger key={category} value={category}>
-                {category}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-        </div>
-
-        <TabsContent value={activeTab} className="mt-6">
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {marketsForCurrentTab.map((market) => (
-              <MarketCard key={market.id} market={market} />
-            ))}
+      {loading ? (
+        <div className="text-center py-12 text-muted-foreground">Loading markets...</div>
+      ) : error ? (
+        <div className="text-center py-12 text-destructive">{error}</div>
+      ) : (
+        <Tabs
+          value={activeTab}
+          className="w-full"
+          onValueChange={setActiveTab}
+        >
+          <div className="overflow-x-auto pb-2">
+            <TabsList>
+              {availableCategories.map((category) => (
+                <TabsTrigger key={category} value={category}>
+                  {category}
+                </TabsTrigger>
+              ))}
+            </TabsList>
           </div>
-          {marketsForCurrentTab.length === 0 && (
-            <div className="text-center py-8 text-muted-foreground">
-              No markets found.
-            </div>
-          )}
-        </TabsContent>
-      </Tabs>
 
-      {closedMarkets.length > 0 && searchTerm === '' && (
+          <TabsContent value={activeTab} className="mt-6">
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {marketsForCurrentTab.map((market) => (
+                <MarketCard key={market.id} market={market} />
+              ))}
+            </div>
+            {marketsForCurrentTab.length === 0 && (
+              <div className="text-center py-8 text-muted-foreground">
+                No markets found.
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
+      )}
+
+      {closedMarkets.length > 0 && searchTerm === '' && !loading && !error && (
         <div className="mt-12">
           <Separator className="my-8" />
           <h2 className="text-3xl font-bold tracking-tight mb-8">

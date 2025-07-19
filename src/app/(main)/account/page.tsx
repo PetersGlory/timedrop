@@ -16,6 +16,7 @@ import { toast } from '@/hooks/use-toast';
 import { Wallet } from 'lucide-react';
 import { useFlutterwave, closePaymentModal } from 'flutterwave-react-v3';
 import { PUBLIC_FLUTTERWAVE_PUBLIC_KEY } from '@/lib/definitions';
+import { ProtectedRoute } from '@/components/ProtectedRoute';
 
 export default function WalletPage() {
   const [amount, setAmount] = useState('');
@@ -106,7 +107,8 @@ export default function WalletPage() {
   };
 
   return (
-    <div className="container mx-auto">
+    <ProtectedRoute>
+      <div className="container mx-auto">
       <header className="mb-8">
         <h1 className="text-4xl font-bold tracking-tight">Wallet</h1>
         <p className="text-muted-foreground mt-2">
@@ -177,5 +179,7 @@ export default function WalletPage() {
         </Card>
       </div>
     </div>
+
+    </ProtectedRoute>
   );
 }
