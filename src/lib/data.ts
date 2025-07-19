@@ -2,7 +2,7 @@
 import type { Market, Order } from './definitions';
 import { eachHourOfInterval, format, addHours, subHours } from 'date-fns';
 
-const generateMarketHistory = (startDate: string, endDate: string, initialVolume: number) => {
+const generateMarketHistory = (startDate: string, endDate: string, initialChance: number) => {
   const start = new Date(startDate);
   const end = new Date(endDate);
   const today = new Date();
@@ -10,23 +10,28 @@ const generateMarketHistory = (startDate: string, endDate: string, initialVolume
   const relevantEndDate = end < today ? end : (start > today ? start : today);
 
   if (relevantEndDate < start) {
-    return [{ date: format(start, 'HH:mm'), volume: initialVolume }];
+    return [{ date: format(start, 'HH:mm'), chance: initialChance }];
   }
 
   const hourRange = eachHourOfInterval({ start, end: relevantEndDate });
-  let lastVolume = initialVolume;
+  let lastChance = initialChance;
 
   if (hourRange.length === 0) {
-    return [{ date: format(start, 'HH:mm'), volume: initialVolume }];
+    return [{ date: format(start, 'HH:mm'), chance: initialChance }];
   }
 
   return hourRange.map((date) => {
-    const changePercent = (Math.random() - 0.48) * 0.1; 
-    const newVolume = Math.max(0, lastVolume * (1 + changePercent));
-    lastVolume = newVolume;
+    // Simulate a gentle random walk for the probability
+    const change = (Math.random() - 0.5) * 5; // Change by up to +/- 2.5 percentage points
+    let newChance = lastChance + change;
+    
+    // Clamp the chance between 5 and 95 to keep it realistic
+    newChance = Math.max(5, Math.min(95, newChance));
+    
+    lastChance = newChance;
     return {
       date: format(date, 'HH:mm'),
-      volume: Math.round(newVolume),
+      chance: Math.round(newChance),
     };
   });
 };
@@ -142,12 +147,12 @@ export const markets: Market[] = [
     history: [],
   },
 ].map(market => {
-  const initialVolumes: {[key: string]: number} = {
-    '1': 1200, '2': 800, '3': 150, '4': 3500, '5': 620, '6': 307, '7': 400, '8': 900, '9': 5000
+  const initialChances: {[key: string]: number} = {
+    '1': 55, '2': 30, '3': 15, '4': 70, '5': 60, '6': 85, '7': 40, '8': 50, '9': 75
   };
   return {
     ...market,
-    history: generateMarketHistory(market.startDate, market.endDate, initialVolumes[market.id] || 1000)
+    history: generateMarketHistory(market.startDate, market.endDate, initialChances[market.id] || 50)
   }
 });
 

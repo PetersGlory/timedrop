@@ -26,7 +26,7 @@ import { Share2 } from 'lucide-react';
 import { isPast } from 'date-fns';
 import { Separator } from '@/components/ui/separator';
 
-const TRADE_AMOUNTS = [5000, 10000, 20000, 50000, 100000, 200000, 500000];
+const TRADE_AMOUNTS = [1000, 5000, 10000, 20000, 50000, 100000, 200000, 500000];
 
 function ShareButton() {
   const handleShare = () => {
@@ -68,7 +68,7 @@ export default function MarketDetailPage({
 }) {
   const market = getMarketById(params.id);
   const searchParams = useSearchParams();
-  const side = searchParams.get('side');
+  const side = searchParams.get('no') === 'true' ? 'no' : 'yes';
   
   const defaultTab = side === 'no' ? 'no' : 'yes';
 
@@ -81,8 +81,8 @@ export default function MarketDetailPage({
   const [tradeAmount, setTradeAmount] = useState(0);
 
   const chartConfig = {
-    volume: {
-      label: 'Volume',
+    chance: {
+      label: 'Chance',
       color: 'hsl(var(--primary))',
     },
   };
@@ -153,11 +153,16 @@ export default function MarketDetailPage({
                       tickLine={false}
                       axisLine={false}
                       tickMargin={8}
+                      domain={[0, 100]}
+                      tickFormatter={(value) => `${value}%`}
                     />
-                    <ChartTooltip content={<ChartTooltipContent />} />
+                    <ChartTooltip
+                      cursor={false}
+                      content={<ChartTooltipContent formatter={(value) => `${value}%`} />}
+                    />
                     <defs>
                       <linearGradient
-                        id="fillVolume"
+                        id="fillChance"
                         x1="0"
                         y1="0"
                         x2="0"
@@ -165,21 +170,21 @@ export default function MarketDetailPage({
                       >
                         <stop
                           offset="5%"
-                          stopColor="var(--color-volume)"
+                          stopColor="var(--color-chance)"
                           stopOpacity={0.8}
                         />
                         <stop
                           offset="95%"
-                          stopColor="var(--color-volume)"
+                          stopColor="var(--color-chance)"
                           stopOpacity={0.1}
                         />
                       </linearGradient>
                     </defs>
                     <Area
-                      dataKey="volume"
+                      dataKey="chance"
                       type="natural"
-                      fill="url(#fillVolume)"
-                      stroke="var(--color-volume)"
+                      fill="url(#fillChance)"
+                      stroke="var(--color-chance)"
                       stackId="a"
                     />
                   </AreaChart>

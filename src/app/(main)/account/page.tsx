@@ -14,9 +14,42 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from '@/hooks/use-toast';
 import { Wallet } from 'lucide-react';
+import { useFlutterwave, closePaymentModal } from 'flutterwave-react-v3';
+import { PUBLIC_FLUTTERWAVE_PUBLIC_KEY } from '@/lib/definitions';
 
 export default function WalletPage() {
   const [amount, setAmount] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [pendingAmount, setPendingAmount] = useState<number | null>(null);
+
+  // Replace with actual user data if available
+  const user = {
+    email: '', // e.g., from auth context
+    phoneNumber: '',
+    firstName: '',
+  };
+
+  const FLUTTERWAVE_PUBLIC_KEY = process.env.NEXT_PUBLIC_FLUTTERWAVE_PUBLIC_KEY || PUBLIC_FLUTTERWAVE_PUBLIC_KEY;
+
+  const config = {
+    public_key: FLUTTERWAVE_PUBLIC_KEY,
+    tx_ref: `Timedrop-${Date.now()}`,
+    amount: pendingAmount || 1000,
+    currency: 'NGN',
+    payment_options: 'card,banktransfer,ussd',
+    customer: {
+      email: user?.email || '',
+      phone_number: user?.phoneNumber || '',
+      name: user?.firstName || '',
+    },
+    customizations: {
+      title: 'Add Funds to Wallet',
+      description: 'Top up your Timedrop wallet',
+      logo: '/logo.png',
+    },
+  };
+
+  const handleFlutterwavePayment = useFlutterwave(config);
 
   const handleDeposit = () => {
     const numericAmount = parseFloat(amount);
@@ -28,14 +61,35 @@ export default function WalletPage() {
       });
       return;
     }
-    toast({
-      title: 'Deposit Successful',
-      description: `₦${numericAmount.toLocaleString()} has been added to your wallet.`,
+    setPendingAmount(numericAmount);
+    setIsLoading(true);
+    handleFlutterwavePayment({
+      callback: async (response: any) => {
+        if (response.status === 'successful') {
+          // TODO: Call backend to confirm and credit wallet
+          toast({
+            title: 'Deposit Successful',
+            description: `₦${numericAmount.toLocaleString()} has been added to your wallet.`,
+          });
+          setAmount('');
+        } else {
+          toast({
+            title: 'Payment Cancelled',
+            description: 'You cancelled the payment or it was not successful.',
+            variant: 'destructive',
+          });
+        }
+        setIsLoading(false);
+        closePaymentModal();
+      },
+      onClose: () => {
+        setIsLoading(false);
+      },
     });
   };
 
   const handleWithdraw = () => {
-     const numericAmount = parseFloat(amount);
+    const numericAmount = parseFloat(amount);
     if (isNaN(numericAmount) || numericAmount < 1000) {
       toast({
         title: 'Invalid Amount',
@@ -81,7 +135,7 @@ export default function WalletPage() {
           <CardHeader>
             <CardTitle>Deposit &amp; Withdraw Funds</CardTitle>
             <CardDescription>
-              Add or remove funds from your wallet to trade.
+              Add or remove funds from your wallet to trade. Minimum amount is ₦1,000.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -99,20 +153,25 @@ export default function WalletPage() {
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
                   min="0"
+                  disabled={isLoading}
                 />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-2">
-              <Button className="w-full" onClick={handleDeposit}>
-                Deposit
+              <Button className="w-full" onClick={handleDeposit} disabled={isLoading}>
+                Deposit with Flutterwave
               </Button>
               <Button
                 className="w-full"
                 variant="outline"
                 onClick={handleWithdraw}
+                disabled={isLoading}
               >
                 Withdraw
               </Button>
+            </div>
+            <div className="text-xs text-muted-foreground pt-2">
+              Payments are securely processed by Flutterwave.
             </div>
           </CardContent>
         </Card>

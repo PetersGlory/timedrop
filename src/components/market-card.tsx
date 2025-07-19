@@ -27,8 +27,8 @@ import { cn } from '@/lib/utils';
 
 export function MarketCard({ market }: { market: Market }) {
   const chartConfig = {
-    volume: {
-      label: 'Volume',
+    chance: {
+      label: 'Chance',
       color: 'hsl(var(--primary))',
     },
   };
@@ -87,20 +87,20 @@ export function MarketCard({ market }: { market: Market }) {
             >
               <defs>
                 <linearGradient id={`fill-${market.id}`} x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="var(--color-volume)" stopOpacity={0.8} />
-                  <stop offset="95%" stopColor="var(--color-volume)" stopOpacity={0.1} />
+                  <stop offset="5%" stopColor="var(--color-chance)" stopOpacity={0.8} />
+                  <stop offset="95%" stopColor="var(--color-chance)" stopOpacity={0.1} />
                 </linearGradient>
               </defs>
               <Area
-                dataKey="volume"
+                dataKey="chance"
                 type="natural"
                 fill={`url(#fill-${market.id})`}
-                stroke="var(--color-volume)"
+                stroke="var(--color-chance)"
                 stackId="a"
               />
               <ChartTooltip
                 cursor={false}
-                content={<ChartTooltipContent hideLabel hideIndicator />}
+                content={<ChartTooltipContent hideLabel hideIndicator formatter={(value) => `${value}%`} />}
               />
             </AreaChart>
           </ChartContainer>
