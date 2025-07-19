@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { notFound, useSearchParams } from 'next/navigation';
 import {
   Card,
@@ -19,12 +19,13 @@ import {
   ChartTooltipContent,
 } from '@/components/ui/chart';
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from 'recharts';
-import { getMarketById } from '@/lib/data';
 import { toast } from '@/hooks/use-toast';
 import { CountdownTimer } from '@/components/countdown-timer';
 import { Share2 } from 'lucide-react';
 import { isPast } from 'date-fns';
 import { Separator } from '@/components/ui/separator';
+import { getMarketById } from '../../account/api';
+// import { getMarketById as fetchMarketById } from '../account/api';
 
 const TRADE_AMOUNTS = [1000, 5000, 10000, 20000, 50000, 100000, 200000, 500000];
 
@@ -60,24 +61,48 @@ function ShareButtonFull() {
   );
 }
 
-
 export default function MarketDetailPage({
   params,
 }: {
   params: { id: string };
 }) {
-  const market = getMarketById(params.id);
+  const [market, setMarket] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const searchParams = useSearchParams();
   const side = searchParams.get('no') === 'true' ? 'no' : 'yes';
-  
   const defaultTab = side === 'no' ? 'no' : 'yes';
 
-  if (!market) {
+  useEffect(() => {
+    async function fetchMarket() {
+      setLoading(true);
+      setError(null);
+      try {
+        const data = await getMarketById(params.id);
+        if (!data || !data.market) {
+          setError('Market not found');
+          setMarket(null);
+        } else {
+          setMarket(data.market);
+        }
+      } catch (err: any) {
+        setError(err.message || 'Failed to load market');
+        setMarket(null);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchMarket();
+  }, [params.id]);
+
+  if (loading) {
+    return <div className="text-center py-12 text-muted-foreground">Loading market...</div>;
+  }
+  if (error || !market) {
     notFound();
   }
 
   const isMarketClosed = isPast(new Date(market.endDate));
-
   const [tradeAmount, setTradeAmount] = useState(0);
 
   const chartConfig = {
@@ -100,9 +125,7 @@ export default function MarketDetailPage({
       title: 'Order Placed',
       description: `${side} order for ${tradeAmount.toLocaleString(undefined, {
         maximumFractionDigits: 0,
-      })} of "${
-        market.question
-      }" has been submitted.`,
+      })} of "${market.question}" has been submitted.`,
     });
   };
 

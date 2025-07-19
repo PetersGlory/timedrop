@@ -17,6 +17,7 @@ import { Switch } from '@/components/ui/switch';
 import { toast } from '@/hooks/use-toast';
 import { useBookmarks } from '@/hooks/use-bookmarks';
 import { Bookmark } from 'lucide-react';
+import { ProtectedRoute } from '@/components/ProtectedRoute';
 
 export default function SettingsPage() {
   const { bookmarks } = useBookmarks();
@@ -30,7 +31,8 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="container mx-auto">
+    <ProtectedRoute>
+      <div className="container mx-auto">
       <header className="mb-8">
         <h1 className="text-4xl font-bold tracking-tight">Settings</h1>
         <p className="text-muted-foreground mt-2">
@@ -99,5 +101,6 @@ export default function SettingsPage() {
         </Card>
       </div>
     </div>
+    </ProtectedRoute>
   );
 }

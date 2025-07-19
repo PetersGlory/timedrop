@@ -23,12 +23,14 @@ import { filledOrders, openOrders } from '@/lib/data';
 import type { Order } from '@/lib/definitions';
 import { useBookmarks } from '@/hooks/use-bookmarks';
 import { Bookmark } from 'lucide-react';
+import { ProtectedRoute } from '@/components/ProtectedRoute';
 
 export default function PortfolioPage() {
   const { bookmarks } = useBookmarks();
 
   return (
-    <div className="container mx-auto">
+    <ProtectedRoute>
+      <div className="container mx-auto">
       <header className="mb-8">
         <h1 className="text-4xl font-bold tracking-tight">Portfolio</h1>
         <p className="text-muted-foreground mt-2">
@@ -94,6 +96,7 @@ export default function PortfolioPage() {
         </Card>
       </div>
     </div>
+    </ProtectedRoute>
   );
 }
 
