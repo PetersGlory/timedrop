@@ -139,34 +139,34 @@ export default function MarketsPage() {
       ) : error ? (
         <div className="text-center py-12 text-destructive">{error}</div>
       ) : (
-        <Tabs
-          value={activeTab}
-          className="w-full"
-          onValueChange={setActiveTab}
-        >
-          <div className="overflow-x-auto pb-2">
-            <TabsList>
-              {availableCategories.map((category) => (
-                <TabsTrigger key={category} value={category}>
-                  {category}
-                </TabsTrigger>
-              ))}
-            </TabsList>
-          </div>
+      <Tabs
+        value={activeTab}
+        className="w-full"
+        onValueChange={setActiveTab}
+      >
+        <div className="overflow-x-auto pb-2">
+          <TabsList>
+            {availableCategories.map((category) => (
+              <TabsTrigger key={category} value={category}>
+                {category}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </div>
 
-          <TabsContent value={activeTab} className="mt-6">
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {marketsForCurrentTab.map((market) => (
-                <MarketCard key={market.id} market={market} />
-              ))}
+        <TabsContent value={activeTab} className="mt-6">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {marketsForCurrentTab.map((market) => (
+              <MarketCard key={market.id} market={market} />
+            ))}
+          </div>
+          {marketsForCurrentTab.length === 0 && (
+            <div className="text-center py-8 text-muted-foreground">
+              No markets found.
             </div>
-            {marketsForCurrentTab.length === 0 && (
-              <div className="text-center py-8 text-muted-foreground">
-                No markets found.
-              </div>
-            )}
-          </TabsContent>
-        </Tabs>
+          )}
+        </TabsContent>
+      </Tabs>
       )}
 
       {closedMarkets.length > 0 && searchTerm === '' && !loading && !error && (
