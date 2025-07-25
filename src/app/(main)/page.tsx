@@ -144,7 +144,7 @@ export default function MarketsPage() {
         className="w-full"
         onValueChange={setActiveTab}
       >
-        <div className="overflow-x-auto pb-2">
+        {/* <div className="overflow-x-auto pb-2">
           <TabsList>
             {availableCategories.map((category) => (
               <TabsTrigger key={category} value={category}>
@@ -152,7 +152,7 @@ export default function MarketsPage() {
               </TabsTrigger>
             ))}
           </TabsList>
-        </div>
+        </div> */}
 
         <TabsContent value={activeTab} className="mt-6">
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
