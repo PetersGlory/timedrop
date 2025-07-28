@@ -22,5 +22,5 @@ export type Order = {
   type: 'BUY' | 'SELL';
   price: number;
   quantity: number;
-  status: 'Open' | 'Filled' | 'Cancelled';
+  status: 'Open' | 'Filled' | 'Cancelled' | 'Closed'| 'pending';
 };

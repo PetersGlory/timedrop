@@ -1,8 +1,7 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
-import { notFound } from 'next/navigation';
+import { notFound, useSearchParams } from 'next/navigation';
 import {
   Card,
   CardContent,
@@ -22,7 +21,8 @@ import { toast } from '@/hooks/use-toast';
 import { CountdownTimer } from '@/components/countdown-timer';
 import { Share2 } from 'lucide-react';
 import { isPast } from 'date-fns';
-import { getMarketById } from '../account/api';
+import { getMarketById, placeOrder } from '../../account/api';
+import { useAuth } from '@/context/AuthContext';
 
 const TRADE_AMOUNTS = [1000, 5000, 10000, 20000, 50000, 100000, 200000, 500000];
 
@@ -58,23 +58,29 @@ function ShareButtonFull() {
   );
 }
 
-export default function MarketDetailPage() {
+export default function MarketDetailPage({
+  params,
+}: {
+  params: { id: string };
+}) {
+  // ✅ All hooks are now at the top level
   const [market, setMarket] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  // const searchParams = useSearchParams();
-  const [params, setParamses] = useState('')
-  // const side = searchParams.get('no') === 'true' ? 'no' : 'yes';
-  // const defaultTab = side === 'no' ? 'no' : 'yes';
+  const [tradeAmount, setTradeAmount] = useState(0);
+  const searchParams = useSearchParams();
+  const {token} = useAuth()
+  
+  const side = searchParams.get('no') === 'true' ? 'no' : 'yes';
+  const defaultTab = side === 'no' ? 'no' : 'yes';
 
   useEffect(() => {
-    const idMarket = localStorage.getItem("marketId") || "";
-    if(idMarket) setParamses(idMarket)
     async function fetchMarket() {
+      const newParams = await params;
       setLoading(true);
       setError(null);
       try {
-        const data = await getMarketById(params);
+        const data = await getMarketById(newParams?.id);
         if (!data || !data.market) {
           setError('Market not found');
           setMarket(null);
@@ -91,6 +97,7 @@ export default function MarketDetailPage() {
     fetchMarket();
   }, []);
 
+  // ✅ Conditional returns come after all hooks
   if (loading) {
     return <div className="text-center py-12 text-muted-foreground">Loading market...</div>;
   }
@@ -99,7 +106,6 @@ export default function MarketDetailPage() {
   }
 
   const isMarketClosed = isPast(new Date(market.endDate));
-  const [tradeAmount, setTradeAmount] = useState(0);
 
   const chartConfig = {
     chance: {
@@ -108,7 +114,8 @@ export default function MarketDetailPage() {
     },
   };
 
-  const handleOrderPlacement = (side: 'Yes' | 'No') => {
+
+  const handleOrderPlacement = async (side: 'Yes' | 'No') => {
     if (tradeAmount === 0) {
       toast({
         variant: 'destructive',
@@ -117,12 +124,41 @@ export default function MarketDetailPage() {
       });
       return;
     }
-    toast({
-      title: 'Order Placed',
-      description: `${side} order for ${tradeAmount.toLocaleString(undefined, {
-        maximumFractionDigits: 0,
-      })} of "${market.question}" has been submitted.`,
-    });
+
+    if (!token) {
+      toast({
+        variant: 'destructive',
+        title: 'Authentication Required',
+        description: 'You must be logged in to place an order.',
+      });
+      return;
+    }
+
+    try {
+      setLoading(true)
+      await placeOrder(
+        {
+          marketId: market.id,
+          side: side.toUpperCase(), // 'YES' or 'NO'
+          quantity: tradeAmount,
+        },
+        token
+      );
+      toast({
+        title: 'Order Placed',
+        description: `${side} order for ${tradeAmount.toLocaleString(undefined, {
+          maximumFractionDigits: 0,
+        })} of "${market.question}" has been submitted.`,
+      });
+    } catch (err: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Order Failed',
+        description: err.message || 'Failed to place order. Please try again.',
+      });
+    }finally{
+      setLoading(false)
+    }
   };
 
   const estimatedCost = tradeAmount;
@@ -270,7 +306,7 @@ export default function MarketDetailPage() {
                   Trading is closed for this market.
                 </div>
               ) : (
-                <Tabs defaultValue={"yes"} className="w-full">
+                <Tabs defaultValue={defaultTab} className="w-full">
                   <TabsList className="grid w-full grid-cols-2">
                     <TabsTrigger value="yes" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Yes</TabsTrigger>
                     <TabsTrigger value="no" className="data-[state=active]:bg-pink-600 data-[state=active]:text-white">No</TabsTrigger>
