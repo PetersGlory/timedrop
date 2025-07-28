@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { notFound, useSearchParams } from 'next/navigation';
+import { notFound } from 'next/navigation';
 import {
   Card,
   CardContent,
@@ -62,10 +62,10 @@ export default function MarketDetailPage() {
   const [market, setMarket] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const searchParams = useSearchParams();
+  // const searchParams = useSearchParams();
   const [params, setParamses] = useState('')
-  const side = searchParams.get('no') === 'true' ? 'no' : 'yes';
-  const defaultTab = side === 'no' ? 'no' : 'yes';
+  // const side = searchParams.get('no') === 'true' ? 'no' : 'yes';
+  // const defaultTab = side === 'no' ? 'no' : 'yes';
 
   useEffect(() => {
     const idMarket = localStorage.getItem("marketId") || "";
@@ -270,7 +270,7 @@ export default function MarketDetailPage() {
                   Trading is closed for this market.
                 </div>
               ) : (
-                <Tabs defaultValue={defaultTab} className="w-full">
+                <Tabs defaultValue={"yes"} className="w-full">
                   <TabsList className="grid w-full grid-cols-2">
                     <TabsTrigger value="yes" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Yes</TabsTrigger>
                     <TabsTrigger value="no" className="data-[state=active]:bg-pink-600 data-[state=active]:text-white">No</TabsTrigger>
