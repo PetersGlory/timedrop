@@ -69,7 +69,9 @@ export function MarketCard({ market }: { market: Market }) {
           <div className="flex flex-col">
             <Badge variant="secondary" className="mb-2 self-start">{market.category}</Badge>
             <CardTitle className="text-lg font-semibold leading-snug">
-              <Link href={`/markets/${market.id}`} className="hover:text-primary transition-colors">
+              <Link onClick={()=>{
+                localStorage.setItem("marketId", market.id)
+              }} href={`/markets`} className="hover:text-primary transition-colors">
                 {market.question}
               </Link>
             </CardTitle>

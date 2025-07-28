@@ -6,7 +6,6 @@ import { notFound, useSearchParams } from 'next/navigation';
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
@@ -23,9 +22,7 @@ import { toast } from '@/hooks/use-toast';
 import { CountdownTimer } from '@/components/countdown-timer';
 import { Share2 } from 'lucide-react';
 import { isPast } from 'date-fns';
-import { Separator } from '@/components/ui/separator';
-import { getMarketById } from '../../account/api';
-// import { getMarketById as fetchMarketById } from '../account/api';
+import { getMarketById } from '../account/api';
 
 const TRADE_AMOUNTS = [1000, 5000, 10000, 20000, 50000, 100000, 200000, 500000];
 
@@ -61,24 +58,23 @@ function ShareButtonFull() {
   );
 }
 
-export default function MarketDetailPage({
-  params,
-}: {
-  params: { id: string };
-}) {
+export default function MarketDetailPage() {
   const [market, setMarket] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const searchParams = useSearchParams();
+  const [params, setParamses] = useState('')
   const side = searchParams.get('no') === 'true' ? 'no' : 'yes';
   const defaultTab = side === 'no' ? 'no' : 'yes';
 
   useEffect(() => {
+    const idMarket = localStorage.getItem("marketId") || "";
+    if(idMarket) setParamses(idMarket)
     async function fetchMarket() {
       setLoading(true);
       setError(null);
       try {
-        const data = await getMarketById(params.id);
+        const data = await getMarketById(params);
         if (!data || !data.market) {
           setError('Market not found');
           setMarket(null);
@@ -93,7 +89,7 @@ export default function MarketDetailPage({
       }
     }
     fetchMarket();
-  }, [params.id]);
+  }, []);
 
   if (loading) {
     return <div className="text-center py-12 text-muted-foreground">Loading market...</div>;
@@ -146,16 +142,37 @@ export default function MarketDetailPage({
                   <div className="flex items-center gap-2 pt-1 text-sm text-muted-foreground">
                     <CountdownTimer endDate={market.endDate} />
                   </div>
+                  {/* Show category if available */}
+                  {market.category && (
+                    <div className="mt-2 text-xs text-muted-foreground">
+                      Category: {market.category}
+                    </div>
+                  )}
                 </div>
                 <ShareButton />
               </div>
             </CardHeader>
             <CardContent>
+              {/* Show image if available */}
+              {market.image && market.image.url && (
+                <div className="mb-6">
+                  <img
+                    src={market.image.url}
+                    alt={market.image.hint || 'Market image'}
+                    className="w-full h-64 object-cover rounded-md border"
+                  />
+                  {market.image.hint && (
+                    <div className="text-xs text-muted-foreground mt-1 text-center">
+                      {market.image.hint}
+                    </div>
+                  )}
+                </div>
+              )}
               <div className="h-96 w-full">
                 <ChartContainer config={chartConfig} className="h-full w-full">
                   <AreaChart
                     accessibilityLayer
-                    data={market.history}
+                    data={market.history && market.history.length > 0 ? market.history : [{ date: '', chance: 0 }]}
                     margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
                   >
                     <CartesianGrid vertical={false} />
