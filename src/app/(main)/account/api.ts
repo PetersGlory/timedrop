@@ -49,6 +49,12 @@ export async function logoutUser(token: string) {
   }, token);
 }
 
+export async function getProfile(token: string) {
+  return apiFetch('/auth/me', {
+    method: 'GET',
+  }, token);
+}
+
 // Fetch wallet balance
 export async function getWalletBalance(token: string) {
   return apiFetch('/wallets', { method: 'GET' }, token);

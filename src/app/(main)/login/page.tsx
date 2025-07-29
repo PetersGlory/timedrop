@@ -42,9 +42,9 @@ export default function LoginPage() {
         <div className="mb-6 text-center">
           <Link
             href="/"
-            className="mb-4 flex items-center gap-2 text-lg font-semibold"
+            className="mb-4 flex items-center w-full gap-2 text-lg font-semibold"
           >
-            <span className="font-display text-2xl font-bold tracking-tight text-primary">
+            <span className="font-display text-2xl text-center w-full font-bold tracking-tight text-primary">
               timedrop
             </span>
           </Link>
