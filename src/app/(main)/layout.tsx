@@ -3,7 +3,7 @@
 
 import * as React from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -25,6 +25,22 @@ const navItems = [
   { href: '/account', label: 'Wallet' },
 ];
 
+// Utility hook to check login status from localStorage
+function useIsLoggedIn() {
+  const [isLoggedIn, setIsLoggedIn] = React.useState<boolean>(false);
+
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const jwt = localStorage.getItem('jwt_token');
+      const token = localStorage.getItem('token');
+      const adminToken = localStorage.getItem('admin_token');
+      setIsLoggedIn(Boolean(jwt || token || adminToken));
+    }
+  }, []);
+
+  return isLoggedIn;
+}
+
 export default function MainLayout({
   children,
 }: {
@@ -34,6 +50,7 @@ export default function MainLayout({
   // Eagerly load bookmarks to prevent hydration issues on pages that use them.
   useBookmarks();
 
+  const isLoggedIn = useIsLoggedIn();
 
   return (
     <div className="flex min-h-screen w-full flex-col">
@@ -101,7 +118,18 @@ export default function MainLayout({
 
         <div className="flex items-center gap-4">
           <ThemeToggle />
-          <UserMenu />
+          {isLoggedIn ? (
+            <UserMenu />
+          ) : (
+            <div className="flex items-center gap-2">
+              <Link href="/login">
+                <Button variant="outline">Login</Button>
+              </Link>
+              <Link href="/signup">
+                <Button variant="default">Get Started</Button>
+              </Link>
+            </div>
+          )}
         </div>
       </header>
       <main className="flex-1 p-4 sm:p-6">{children}</main>
@@ -125,6 +153,7 @@ export default function MainLayout({
 }
 
 function UserMenu() {
+  const router = useRouter();
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -143,7 +172,10 @@ function UserMenu() {
           <Link href="/settings">Settings</Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem>Logout</DropdownMenuItem>
+        <DropdownMenuItem onClick={()=>{
+          localStorage.clear();
+          router.replace("/");
+        }}>Logout</DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );

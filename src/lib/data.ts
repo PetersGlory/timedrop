@@ -2,7 +2,7 @@
 import type { Market, Order } from './definitions';
 import { eachHourOfInterval, format, addHours, subHours } from 'date-fns';
 
-const generateMarketHistory = (startDate: string, endDate: string, initialChance: number) => {
+export const generateMarketHistory = (startDate: string, endDate: string, initialChance: number) => {
   const start = new Date(startDate);
   const end = new Date(endDate);
   const today = new Date();

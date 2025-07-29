@@ -139,7 +139,7 @@ export default function MarketDetailPage({
       await placeOrder(
         {
           marketId: market.id,
-          side: side.toUpperCase(), // 'YES' or 'NO'
+          type: side.toUpperCase(), // 'YES' or 'NO'
           quantity: tradeAmount,
         },
         token

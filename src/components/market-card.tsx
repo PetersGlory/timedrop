@@ -24,6 +24,7 @@ import { CountdownTimer } from './countdown-timer';
 import { useToast } from '@/hooks/use-toast';
 import { useBookmarks } from '@/hooks/use-bookmarks';
 import { cn } from '@/lib/utils';
+import { generateMarketHistory } from '@/lib/data';
 
 export function MarketCard({ market }: { market: Market }) {
   const chartConfig = {
@@ -84,7 +85,7 @@ export function MarketCard({ market }: { market: Market }) {
           <ChartContainer config={chartConfig} className="h-full w-full">
             <AreaChart
               accessibilityLayer
-              data={market.history}
+              data={generateMarketHistory(market.startDate, market.endDate,50)}
               margin={{ top: 0, right: 0, left: 0, bottom: 0 }}
             >
               <defs>
