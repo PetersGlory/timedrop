@@ -140,8 +140,9 @@ export default function MarketDetailPage({
       await placeOrder(
         {
           marketId: market.id,
-          type: side.toUpperCase(), // 'YES' or 'NO'
+          type: side.toUpperCase() === "YES" ? "BUY" : "SELL", // 'YES' or 'NO'
           quantity: tradeAmount,
+          price: tradeAmount
         },
         token
       );
