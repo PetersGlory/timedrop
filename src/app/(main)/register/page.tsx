@@ -6,6 +6,7 @@ import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Eye, EyeOff } from "lucide-react";
+import Link from "next/link";
 
 export default function RegisterPage() {
   const [firstName, setFirstName] = useState("");
@@ -41,7 +42,14 @@ export default function RegisterPage() {
     <div className="min-h-screen flex items-center justify-center bg-muted">
       <div className="w-full max-w-md rounded-lg shadow-lg p-8">
         <div className="mb-6 text-center">
-          <img src="/favicon.ico" alt="Logo" className="mx-auto mb-2 w-12 h-12" />
+          <Link
+            href="/"
+            className="mb-4 flex items-center gap-2 text-lg font-semibold"
+          >
+            <span className="font-display text-2xl font-bold tracking-tight text-primary">
+              timedrop
+            </span>
+          </Link>
           <h1 className="text-3xl font-bold">Create Account</h1>
           <p className="text-muted-foreground mt-1">Sign up for Timedrop</p>
         </div>
