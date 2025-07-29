@@ -23,6 +23,7 @@ import { Share2 } from 'lucide-react';
 import { isPast } from 'date-fns';
 import { getMarketById, placeOrder } from '../../account/api';
 import { useAuth } from '@/context/AuthContext';
+import { generateMarketHistory } from '@/lib/data';
 
 const TRADE_AMOUNTS = [1000, 5000, 10000, 20000, 50000, 100000, 200000, 500000];
 
@@ -208,7 +209,7 @@ export default function MarketDetailPage({
                 <ChartContainer config={chartConfig} className="h-full w-full">
                   <AreaChart
                     accessibilityLayer
-                    data={market.history && market.history.length > 0 ? market.history : [{ date: '', chance: 0 }]}
+                    data={generateMarketHistory(market.startDate, market.endDate,50)}
                     margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
                   >
                     <CartesianGrid vertical={false} />

@@ -125,7 +125,7 @@ export default function MainLayout({
               <Link href="/login">
                 <Button variant="outline">Login</Button>
               </Link>
-              <Link href="/signup">
+              <Link href="/register">
                 <Button variant="default">Get Started</Button>
               </Link>
             </div>

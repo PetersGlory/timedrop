@@ -31,22 +31,16 @@ export default function PortfolioPage() {
   const { bookmarks } = useBookmarks();
   const { token } = useAuth();
 
-  const [orders, setOrders] = useState<Order[]>([]);
+  const [openOrders, setOpenOrders] = useState<Order[]>([]);
+  const [filledOrders, setFilledOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  // Split orders into open and filled
-  const openOrders = orders.filter((order) =>
-    order.status === 'Open' || order.status === 'pending'
-  );
-  const filledOrders = orders.filter((order) =>
-    order.status === 'Filled' || order.status === 'Closed' || order.status === 'Cancelled'
-  );
 
   useEffect(() => {
     async function fetchOrders() {
       if (!token) {
-        setOrders([]);
+        setOpenOrders([]);
+        setFilledOrders([]);
         setLoading(false);
         return;
       }
@@ -54,11 +48,13 @@ export default function PortfolioPage() {
       setError(null);
       try {
         const apiOrders = await getOrders(token);
-        // If the API returns { orders: [...] }
-        setOrders(apiOrders.orders || apiOrders);
+        // Expecting { openOrders: [...], filledOrders: [...] }
+        setOpenOrders(Array.isArray(apiOrders.openOrders) ? apiOrders.openOrders : []);
+        setFilledOrders(Array.isArray(apiOrders.filledOrders) ? apiOrders.filledOrders : []);
       } catch (err: any) {
         setError(err.message || 'Failed to load orders');
-        setOrders([]);
+        setOpenOrders([]);
+        setFilledOrders([]);
       } finally {
         setLoading(false);
       }

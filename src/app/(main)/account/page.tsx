@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -17,18 +17,61 @@ import { Wallet } from 'lucide-react';
 import { useFlutterwave, closePaymentModal } from 'flutterwave-react-v3';
 import { PUBLIC_FLUTTERWAVE_PUBLIC_KEY } from '@/lib/definitions';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
+import { useAuth } from '@/context/AuthContext';
+import {
+  getWalletBalance,
+  depositFunds,
+  withdrawFunds,
+} from './api';
 
 export default function WalletPage() {
+  const { token } = useAuth();
   const [amount, setAmount] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [pendingAmount, setPendingAmount] = useState<number | null>(null);
+  const [balance, setBalance] = useState<number | null>(null);
+  const [loadingBalance, setLoadingBalance] = useState(true);
 
   // Replace with actual user data if available
+  // You may want to get user info from your auth context or user profile endpoint
   const user = {
     email: '', // e.g., from auth context
     phoneNumber: '',
     firstName: '',
   };
+
+  // Fetch wallet balance on mount and after deposit/withdraw
+  const fetchBalance = async () => {
+    if (!token) {
+      setBalance(null);
+      setLoadingBalance(false);
+      return;
+    }
+    setLoadingBalance(true);
+    try {
+      const data = await getWalletBalance(token);
+      // The backend now returns { wallet: { ... } }
+      if (data && data.wallet && typeof data.wallet.balance === 'number') {
+        setBalance(data.wallet.balance);
+      } else {
+        setBalance(null);
+      }
+    } catch (err: any) {
+      setBalance(null);
+      toast({
+        title: 'Error',
+        description: err.message || 'Failed to fetch wallet balance.',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoadingBalance(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchBalance();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token]);
 
   const FLUTTERWAVE_PUBLIC_KEY = process.env.NEXT_PUBLIC_FLUTTERWAVE_PUBLIC_KEY || PUBLIC_FLUTTERWAVE_PUBLIC_KEY;
 
@@ -67,12 +110,23 @@ export default function WalletPage() {
     handleFlutterwavePayment({
       callback: async (response: any) => {
         if (response.status === 'successful') {
-          // TODO: Call backend to confirm and credit wallet
-          toast({
-            title: 'Deposit Successful',
-            description: `₦${numericAmount.toLocaleString()} has been added to your wallet.`,
-          });
-          setAmount('');
+          // Call backend to confirm and credit wallet
+          try {
+            if (!token) throw new Error('Not authenticated');
+            await depositFunds(numericAmount, token);
+            toast({
+              title: 'Deposit Successful',
+              description: `₦${numericAmount.toLocaleString()} has been added to your wallet.`,
+            });
+            setAmount('');
+            fetchBalance();
+          } catch (err: any) {
+            toast({
+              title: 'Deposit Error',
+              description: err.message || 'Failed to credit your wallet. Please contact support if your payment was successful.',
+              variant: 'destructive',
+            });
+          }
         } else {
           toast({
             title: 'Payment Cancelled',
@@ -89,7 +143,7 @@ export default function WalletPage() {
     });
   };
 
-  const handleWithdraw = () => {
+  const handleWithdraw = async () => {
     const numericAmount = parseFloat(amount);
     if (isNaN(numericAmount) || numericAmount < 1000) {
       toast({
@@ -99,87 +153,109 @@ export default function WalletPage() {
       });
       return;
     }
-    toast({
-      title: 'Withdrawal Processed',
-      description: `₦${numericAmount.toLocaleString()} has been withdrawn from your wallet.`,
-      variant: 'default',
-    });
+    setIsLoading(true);
+    try {
+      if (!token) throw new Error('Not authenticated');
+      await withdrawFunds(numericAmount, token);
+      toast({
+        title: 'Withdrawal Processed',
+        description: `₦${numericAmount.toLocaleString()} has been withdrawn from your wallet.`,
+        variant: 'default',
+      });
+      setAmount('');
+      fetchBalance();
+    } catch (err: any) {
+      toast({
+        title: 'Withdrawal Error',
+        description: err.message || 'Failed to process withdrawal.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
     <ProtectedRoute>
       <div className="container mx-auto">
-      <header className="mb-8">
-        <h1 className="text-4xl font-bold tracking-tight">Wallet</h1>
-        <p className="text-muted-foreground mt-2">
-          Manage your wallet balance and view your performance.
-        </p>
-      </header>
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Account Balance
-            </CardTitle>
-            <Wallet className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">₦1,250.75</div>
-            <p className="text-xs text-muted-foreground">
-              Your available trading balance.
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="mt-8 grid gap-8 md:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>Deposit &amp; Withdraw Funds</CardTitle>
-            <CardDescription>
-              Add or remove funds from your wallet to trade. Minimum amount is ₦1,000.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="amount">Amount</Label>
-              <div className="relative">
-                <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-muted-foreground">
-                  ₦
-                </span>
-                <Input
-                  id="amount"
-                  type="number"
-                  placeholder="1000.00"
-                  className="pl-8"
-                  value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
-                  min="0"
-                  disabled={isLoading}
-                />
+        <header className="mb-8">
+          <h1 className="text-4xl font-bold tracking-tight">Wallet</h1>
+          <p className="text-muted-foreground mt-2">
+            Manage your wallet balance and view your performance.
+          </p>
+        </header>
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">
+                Account Balance
+              </CardTitle>
+              <Wallet className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {loadingBalance ? (
+                  <span className="animate-pulse text-muted-foreground">Loading...</span>
+                ) : (
+                  balance !== null
+                    ? `₦${balance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                    : <span className="text-destructive">₦0</span>
+                )}
               </div>
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              <Button className="w-full" onClick={handleDeposit} disabled={isLoading}>
-                Deposit with Flutterwave
-              </Button>
-              <Button
-                className="w-full"
-                variant="outline"
-                onClick={handleWithdraw}
-                disabled={isLoading}
-              >
-                Withdraw
-              </Button>
-            </div>
-            <div className="text-xs text-muted-foreground pt-2">
-              Payments are securely processed by Flutterwave.
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    </div>
+              <p className="text-xs text-muted-foreground">
+                Your available trading balance.
+              </p>
+            </CardContent>
+          </Card>
+        </div>
 
+        <div className="mt-8 grid gap-8 md:grid-cols-2">
+          <Card>
+            <CardHeader>
+              <CardTitle>Deposit &amp; Withdraw Funds</CardTitle>
+              <CardDescription>
+                Add or remove funds from your wallet to trade. Minimum amount is ₦1,000.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="amount">Amount</Label>
+                <div className="relative">
+                  <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-muted-foreground">
+                    ₦
+                  </span>
+                  <Input
+                    id="amount"
+                    type="number"
+                    placeholder="1000.00"
+                    className="pl-8"
+                    value={amount}
+                    onChange={(e) => setAmount(e.target.value)}
+                    min="0"
+                    disabled={isLoading}
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <Button className="w-full" onClick={handleDeposit} disabled={isLoading || loadingBalance}>
+                  Deposit with Flutterwave
+                </Button>
+                <Button
+                  className="w-full"
+                  variant="outline"
+                  onClick={handleWithdraw}
+                  disabled={isLoading || loadingBalance}
+                >
+                  Withdraw
+                </Button>
+              </div>
+              <div className="text-xs text-muted-foreground pt-2">
+                Payments are securely processed by Flutterwave.
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     </ProtectedRoute>
   );
 }

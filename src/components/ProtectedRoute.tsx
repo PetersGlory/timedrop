@@ -9,10 +9,19 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const router = useRouter();
 
   useEffect(() => {
-    if (!token) {
-      router.push('/login');
+    const possibleKeys = ['jwt_token', 'token', 'admin_token'];
+    let foundToken: string | null = null;
+    for (const key of possibleKeys) {
+      const stored = localStorage.getItem(key);
+      if (stored) {
+        foundToken = stored;
+        break;
+      }
     }
-  }, [token, router]);
+    if (!foundToken) {
+      router.push('/register');
+    }
+  }, [router]);
 
   if (!token) return null; // or a loading spinner
 

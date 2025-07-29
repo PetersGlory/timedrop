@@ -51,12 +51,12 @@ export async function logoutUser(token: string) {
 
 // Fetch wallet balance
 export async function getWalletBalance(token: string) {
-  return apiFetch('/wallet', { method: 'GET' }, token);
+  return apiFetch('/wallets', { method: 'GET' }, token);
 }
 
 // Deposit funds (after successful Flutterwave payment)
 export async function depositFunds(amount: number, token: string) {
-  return apiFetch('/wallet/deposit', {
+  return apiFetch('/wallets/deposit', {
     method: 'POST',
     body: JSON.stringify({ amount }),
   }, token);
@@ -64,7 +64,7 @@ export async function depositFunds(amount: number, token: string) {
 
 // Withdraw funds
 export async function withdrawFunds(amount: number, token: string) {
-  return apiFetch('/wallet/withdraw', {
+  return apiFetch('/wallets/withdraw', {
     method: 'POST',
     body: JSON.stringify({ amount }),
   }, token);

@@ -14,8 +14,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [token, setToken] = useState<string | null>(null);
 
   useEffect(() => {
-    const stored = localStorage.getItem('jwt_token');
-    if (stored) setToken(stored);
+    // Attempt to retrieve any of the possible token keys from localStorage
+    const possibleKeys = ['jwt_token', 'token', 'admin_token'];
+    for (const key of possibleKeys) {
+      const stored = localStorage.getItem(key);
+      console.log(stored)
+      if (stored) {
+        setToken(stored);
+        break;
+      }
+    }
   }, []);
 
   const login = (jwt: string) => {
