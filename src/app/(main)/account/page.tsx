@@ -22,6 +22,7 @@ import {
   getWalletBalance,
   depositFunds,
   withdrawFunds,
+  getProfile,
 } from './api';
 
 export default function WalletPage() {
@@ -30,15 +31,9 @@ export default function WalletPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [pendingAmount, setPendingAmount] = useState<number | null>(null);
   const [balance, setBalance] = useState<number | null>(null);
+  const [userProfile, setUserProfile] = useState<any>();
   const [loadingBalance, setLoadingBalance] = useState(true);
 
-  // Replace with actual user data if available
-  // You may want to get user info from your auth context or user profile endpoint
-  const user = {
-    email: '', // e.g., from auth context
-    phoneNumber: '',
-    firstName: '',
-  };
 
   // Fetch wallet balance on mount and after deposit/withdraw
   const fetchBalance = async () => {
@@ -68,8 +63,28 @@ export default function WalletPage() {
     }
   };
 
+  const fetchProfile = async () => {
+    if (!token) {
+      setUserProfile(null);
+      return;
+    }
+    try {
+      // getProfile is imported from ./api
+      const profile = await getProfile(token);
+      setUserProfile(profile);
+    } catch (err: any) {
+      setUserProfile(null);
+      toast({
+        title: 'Error',
+        description: err.message || 'Failed to fetch user profile.',
+        variant: 'destructive',
+      });
+    }
+  };
+
   useEffect(() => {
     fetchBalance();
+    fetchProfile();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
@@ -82,9 +97,9 @@ export default function WalletPage() {
     currency: 'NGN',
     payment_options: 'card,banktransfer,ussd',
     customer: {
-      email: user?.email || '',
-      phone_number: user?.phoneNumber || '',
-      name: user?.firstName || '',
+      email: userProfile?.email || '',
+      phone_number: userProfile?.phone || '',
+      name: userProfile?.firstName || '',
     },
     customizations: {
       title: 'Add Funds to Wallet',
