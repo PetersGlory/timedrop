@@ -34,7 +34,8 @@ export default function SettingsPage() {
     email?: string;
   }>({});
   const [loading, setLoading] = useState(true);
-  const [name, setName] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
 
   // Notification preferences state
@@ -58,9 +59,8 @@ export default function SettingsPage() {
           lastName: profileData.lastName,
           email: profileData.email,
         });
-        setName(
-          [profileData.firstName, profileData.lastName].filter(Boolean).join(' ') || ''
-        );
+        setFirstName(profileData.firstName || '');
+        setLastName(profileData.lastName || '');
         setEmail(profileData.email || '');
 
         // Fetch settings (for notifications)
@@ -91,18 +91,15 @@ export default function SettingsPage() {
     if (!auth?.token) return;
     setLoading(true);
     try {
-      // Split name into first and last
-      const [firstName, ...rest] = name.trim().split(' ');
-      const lastName = rest.join(' ');
       await updateSettings(
         {
-          firstName,
-          lastName,
+          firstName: firstName.trim(),
+          lastName: lastName.trim(),
           email,
         },
         auth.token
       );
-      setProfile({ firstName, lastName, email });
+      setProfile({ firstName: firstName.trim(), lastName: lastName.trim(), email });
       toast({
         title: 'Settings Saved',
         description: 'Your changes have been successfully saved.',
@@ -146,6 +143,39 @@ export default function SettingsPage() {
     }
   };
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-background">
+        <div className="flex flex-col items-center gap-4">
+          <svg
+            className="animate-spin h-8 w-8 text-primary"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
+            <circle
+              className="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              strokeWidth="4"
+            />
+            <path
+              className="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+            />
+          </svg>
+          <span className="text-lg font-medium text-muted-foreground">
+            Loading your settings, please wait...
+          </span>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <ProtectedRoute>
       <div className="container mx-auto">
@@ -164,12 +194,23 @@ export default function SettingsPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="name">Name</Label>
+                  <Label htmlFor="firstName">First Name</Label>
                   <Input
-                    id="name"
-                    value={name}
-                    onChange={e => setName(e.target.value)}
+                    id="firstName"
+                    value={firstName}
+                    onChange={e => setFirstName(e.target.value)}
                     disabled={loading}
+                    autoComplete="given-name"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="lastName">Last Name</Label>
+                  <Input
+                    id="lastName"
+                    value={lastName}
+                    onChange={e => setLastName(e.target.value)}
+                    disabled={loading}
+                    autoComplete="family-name"
                   />
                 </div>
                 <div className="space-y-2">
@@ -178,7 +219,8 @@ export default function SettingsPage() {
                     id="email"
                     type="email"
                     value={email}
-                    onChange={e => setEmail(e.target.value)}
+                    className='bg-muted'
+                    readOnly
                     disabled={loading}
                   />
                 </div>

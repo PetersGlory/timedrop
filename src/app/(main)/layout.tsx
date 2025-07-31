@@ -18,6 +18,7 @@ import { cn } from '@/lib/utils';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Menu, User } from 'lucide-react';
 import { useBookmarks } from '@/hooks/use-bookmarks'; // Hydration for bookmarks
+import { useTheme } from 'next-themes';
 
 const navItems = [
   { href: '/', label: 'Live Markets' },
@@ -28,6 +29,7 @@ const navItems = [
 // Utility hook to check login status from localStorage
 function useIsLoggedIn() {
   const [isLoggedIn, setIsLoggedIn] = React.useState<boolean>(false);
+  const {setTheme} = useTheme();
 
   React.useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -36,6 +38,7 @@ function useIsLoggedIn() {
       const adminToken = localStorage.getItem('admin_token');
       setIsLoggedIn(Boolean(jwt || token || adminToken));
     }
+    setTheme('light')
   }, []);
 
   return isLoggedIn;
@@ -70,7 +73,7 @@ export default function MainLayout({
                     href="/"
                     className="mb-4 flex items-center gap-2 text-lg font-semibold"
                   >
-                    <span className="font-display text-2xl font-bold tracking-tight text-primary">
+                    <span className="font-display text-lg md:text-2xl font-bold tracking-tight text-primary">
                       timedrop
                     </span>
                   </Link>

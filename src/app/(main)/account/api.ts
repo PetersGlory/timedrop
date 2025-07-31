@@ -69,11 +69,22 @@ export async function depositFunds(amount: number, token: string) {
 }
 
 // Withdraw funds
-export async function withdrawFunds(amount: number, token: string) {
-  return apiFetch('/wallets/withdraw', {
-    method: 'POST',
-    body: JSON.stringify({ amount }),
-  }, token);
+export async function withdrawFunds(
+  data: { amount: number; accountNumber: string; bankName: string },
+  token: string
+) {
+  return apiFetch(
+    '/wallets/withdraw',
+    {
+      method: 'POST',
+      body: JSON.stringify({
+        amount: data.amount,
+        accountNumber: data.accountNumber,
+        bankName: data.bankName,
+      }),
+    },
+    token
+  );
 }
 
 // --- Bookmarks ---

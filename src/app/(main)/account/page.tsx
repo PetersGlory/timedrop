@@ -34,6 +34,11 @@ export default function WalletPage() {
   const [userProfile, setUserProfile] = useState<any>();
   const [loadingBalance, setLoadingBalance] = useState(true);
 
+  // Withdrawal modal state
+  const [showWithdrawModal, setShowWithdrawModal] = useState(false);
+  const [withdrawAccountNumber, setWithdrawAccountNumber] = useState('');
+  const [withdrawBankName, setWithdrawBankName] = useState('');
+  const [withdrawError, setWithdrawError] = useState<string | null>(null);
 
   // Fetch wallet balance on mount and after deposit/withdraw
   const fetchBalance = async () => {
@@ -160,28 +165,50 @@ export default function WalletPage() {
     });
   };
 
-  const handleWithdraw = async () => {
+  // Open modal to collect withdrawal details
+  const handleWithdraw = () => {
+    setWithdrawError(null);
+    setShowWithdrawModal(true);
+  };
+
+  // Actual withdrawal after collecting account info
+  const handleWithdrawSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setWithdrawError(null);
+
     const numericAmount = parseFloat(amount);
     if (isNaN(numericAmount) || numericAmount < 1000) {
-      toast({
-        title: 'Invalid Amount',
-        description: 'Minimum withdrawal amount is ₦1,000.',
-        variant: 'destructive',
-      });
+      setWithdrawError('Minimum withdrawal amount is ₦1,000.');
+      return;
+    }
+    if (!withdrawAccountNumber.trim() || !withdrawBankName.trim()) {
+      setWithdrawError('Please provide both account number and bank name.');
       return;
     }
     setIsLoading(true);
     try {
       if (!token) throw new Error('Not authenticated');
-      await withdrawFunds(numericAmount, token);
+      // Pass account number and bank name to the backend
+      await withdrawFunds(
+        {
+          amount: numericAmount,
+          accountNumber: withdrawAccountNumber.trim(),
+          bankName: withdrawBankName.trim(),
+        },
+        token
+      );
       toast({
         title: 'Withdrawal Processed',
         description: `₦${numericAmount.toLocaleString()} has been withdrawn from your wallet.`,
         variant: 'default',
       });
       setAmount('');
+      setWithdrawAccountNumber('');
+      setWithdrawBankName('');
+      setShowWithdrawModal(false);
       fetchBalance();
     } catch (err: any) {
+      setWithdrawError(err.message || 'Failed to process withdrawal.');
       toast({
         title: 'Withdrawal Error',
         description: err.message || 'Failed to process withdrawal.',
@@ -192,8 +219,89 @@ export default function WalletPage() {
     }
   };
 
+  // Modal component for withdrawal details
+  const WithdrawModal = () => {
+    if (!showWithdrawModal) return null;
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+        <div className="bg-white dark:bg-background rounded-lg shadow-lg p-6 w-full max-w-md relative">
+          <button
+            className="absolute top-2 right-2 text-muted-foreground hover:text-destructive"
+            onClick={() => {
+              setShowWithdrawModal(false);
+              setWithdrawError(null);
+            }}
+            aria-label="Close"
+            type="button"
+          >
+            ×
+          </button>
+          <h2 className="text-lg font-semibold mb-4">Withdrawal Details</h2>
+          <form onSubmit={handleWithdrawSubmit} className="space-y-4">
+            <div>
+              <Label htmlFor="withdraw-account-number">Account Number</Label>
+              <Input
+                id="withdraw-account-number"
+                type="text"
+                value={withdrawAccountNumber}
+                onChange={e => setWithdrawAccountNumber(e.target.value)}
+                disabled={isLoading}
+                maxLength={20}
+                autoComplete="off"
+                required
+              />
+            </div>
+            <div>
+              <Label htmlFor="withdraw-bank-name">Bank Name</Label>
+              <Input
+                id="withdraw-bank-name"
+                type="text"
+                value={withdrawBankName}
+                onChange={e => setWithdrawBankName(e.target.value)}
+                disabled={isLoading}
+                maxLength={50}
+                autoComplete="off"
+                required
+              />
+            </div>
+            {withdrawError && (
+              <div className="text-destructive text-sm">{withdrawError}</div>
+            )}
+            <div className="flex justify-end gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setShowWithdrawModal(false);
+                  setWithdrawError(null);
+                }}
+                disabled={isLoading}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" disabled={isLoading}>
+                {isLoading ? (
+                  <span className="flex items-center justify-center">
+                    <svg className="animate-spin h-4 w-4 mr-2 text-muted-foreground" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+                    </svg>
+                    Processing...
+                  </span>
+                ) : (
+                  "Confirm Withdrawal"
+                )}
+              </Button>
+            </div>
+          </form>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <ProtectedRoute>
+      <WithdrawModal />
       <div className="container mx-auto">
         <header className="mb-8">
           <h1 className="text-4xl font-bold tracking-tight">Wallet</h1>
@@ -263,7 +371,7 @@ export default function WalletPage() {
                   onClick={handleWithdraw}
                   disabled={isLoading || loadingBalance}
                 >
-                  {isLoading ? (
+                  {isLoading && showWithdrawModal ? (
                     <span className="flex items-center justify-center">
                       <svg className="animate-spin h-4 w-4 mr-2 text-muted-foreground" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
