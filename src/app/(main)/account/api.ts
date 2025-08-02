@@ -70,7 +70,16 @@ export async function depositFunds(amount: number, token: string) {
 
 // Withdraw funds
 export async function withdrawFunds(
-  data: { amount: number; accountNumber: string; bankName: string },
+  data: {
+    account_bank: string;
+    account_number: string;
+    amount: number;
+    narration?: string;
+    currency?: string;
+    reference?: string;
+    callback_url?: string;
+    debit_currency?: string;
+  },
   token: string
 ) {
   return apiFetch(
@@ -78,14 +87,42 @@ export async function withdrawFunds(
     {
       method: 'POST',
       body: JSON.stringify({
+        account_bank: data.account_bank,
+        account_number: data.account_number,
         amount: data.amount,
-        accountNumber: data.accountNumber,
-        bankName: data.bankName,
+        narration: data.narration,
+        currency: data.currency,
+        reference: data.reference,
+        callback_url: data.callback_url,
+        debit_currency: data.debit_currency,
       }),
     },
     token
   );
 }
+
+export async function getBanks(token: string) {
+  return apiFetch('/wallets/banks/ng', { method: 'GET' }, token);
+}
+
+export async function validateAccount(
+  data: { account_number: string; account_bank: string },
+  token: string
+) {
+  return apiFetch(
+    '/verify-account',
+    {
+      method: 'POST',
+      body: JSON.stringify({
+        account_number: data.account_number,
+        account_bank: data.account_bank,
+      }),
+    },
+    token
+  );
+}
+
+
 
 // --- Bookmarks ---
 

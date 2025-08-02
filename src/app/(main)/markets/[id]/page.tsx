@@ -391,7 +391,7 @@ function TradeForm({
   return (
     <div className="pt-4 space-y-4">
       <div className="space-y-2">
-        <Label>Amount to Trade</Label>
+        <Label>Trade to Contract</Label>
         <div className="flex flex-wrap gap-2">
           {TRADE_AMOUNTS.map((amount) => (
             <Button
@@ -411,7 +411,7 @@ function TradeForm({
       <div className="border-t pt-4 space-y-2">
         <div className="flex justify-between text-sm">
           <span className="text-muted-foreground">
-            Your Trade:
+            Your Contract:
           </span>
           <span className="font-medium">
             {estimatedCost.toFixed(2)}

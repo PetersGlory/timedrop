@@ -23,6 +23,8 @@ import {
   depositFunds,
   withdrawFunds,
   getProfile,
+  getBanks,
+  validateAccount,
 } from './api';
 
 export default function WalletPage() {
@@ -37,8 +39,11 @@ export default function WalletPage() {
   // Withdrawal modal state
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
   const [withdrawAccountNumber, setWithdrawAccountNumber] = useState('');
-  const [withdrawBankName, setWithdrawBankName] = useState('');
+  const [withdrawBankCode, setWithdrawBankCode] = useState('');
   const [withdrawError, setWithdrawError] = useState<string | null>(null);
+  const [banks, setBanks] = useState<{ name: string; code: string }[]>([]);
+  const [isValidatingAccount, setIsValidatingAccount] = useState(false);
+  const [accountName, setAccountName] = useState<string | null>(null);
 
   // Fetch wallet balance on mount and after deposit/withdraw
   const fetchBalance = async () => {
@@ -87,6 +92,24 @@ export default function WalletPage() {
     }
   };
 
+  // Fetch banks on mount
+  useEffect(() => {
+    const fetchBanks = async () => {
+      try {
+        const banksList = await getBanks(token as string);
+        setBanks(banksList || []);
+      } catch (err: any) {
+        setBanks([]);
+        toast({
+          title: 'Error',
+          description: err.message || 'Failed to fetch banks list.',
+          variant: 'destructive',
+        });
+      }
+    };
+    fetchBanks();
+  }, []);
+
   useEffect(() => {
     fetchBalance();
     fetchProfile();
@@ -126,6 +149,7 @@ export default function WalletPage() {
       return;
     }
     setPendingAmount(numericAmount);
+    const updatedAmount = numericAmount * 0.02 * 0.075;
     setIsLoading(true);
     handleFlutterwavePayment({
       callback: async (response: any) => {
@@ -133,7 +157,7 @@ export default function WalletPage() {
           // Call backend to confirm and credit wallet
           try {
             if (!token) throw new Error('Not authenticated');
-            await depositFunds(numericAmount, token);
+            await depositFunds((numericAmount - updatedAmount), token);
             toast({
               title: 'Deposit Successful',
               description: `₦${numericAmount.toLocaleString()} has been added to your wallet.`,
@@ -169,7 +193,58 @@ export default function WalletPage() {
   const handleWithdraw = () => {
     setWithdrawError(null);
     setShowWithdrawModal(true);
+    setWithdrawAccountNumber('');
+    setWithdrawBankCode('');
+    setAccountName(null);
   };
+
+  // Validate account number when both bank and account number are present
+  useEffect(() => {
+    const validate = async () => {
+      setAccountName(null);
+      setWithdrawError(null);
+      if (
+        withdrawAccountNumber.trim().length >= 10 &&
+        withdrawBankCode &&
+        withdrawAccountNumber.trim().length <= 12 // allow for 10-12 digit accounts
+      ) {
+        setIsValidatingAccount(true);
+        try {
+          const result = await validateAccount({
+            account_number: withdrawAccountNumber.trim(),
+            account_bank: withdrawBankCode,
+          }, token as string);
+          if (result && result.account_name) {
+            setAccountName(result.account_name);
+            setWithdrawError(null);
+          } else {
+            setAccountName(null);
+            setWithdrawError('Account validation failed. Please check details.');
+          }
+        } catch (err: any) {
+          setAccountName(null);
+          setWithdrawError(
+            err.message || 'Failed to validate account. Please check details.'
+          );
+        } finally {
+          setIsValidatingAccount(false);
+        }
+      } else {
+        setAccountName(null);
+      }
+    };
+
+    // Only validate if both fields are filled
+    if (
+      withdrawAccountNumber.trim().length >= 10 &&
+      withdrawBankCode
+    ) {
+      validate();
+    } else {
+      setAccountName(null);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [withdrawAccountNumber, withdrawBankCode]);
 
   // Actual withdrawal after collecting account info
   const handleWithdrawSubmit = async (e: React.FormEvent) => {
@@ -181,19 +256,28 @@ export default function WalletPage() {
       setWithdrawError('Minimum withdrawal amount is ₦1,000.');
       return;
     }
-    if (!withdrawAccountNumber.trim() || !withdrawBankName.trim()) {
-      setWithdrawError('Please provide both account number and bank name.');
+    if (!withdrawAccountNumber.trim() || !withdrawBankCode) {
+      setWithdrawError('Please provide both account number and bank.');
+      return;
+    }
+    if (!accountName) {
+      setWithdrawError('Please validate your account details before withdrawing.');
       return;
     }
     setIsLoading(true);
     try {
       if (!token) throw new Error('Not authenticated');
-      // Pass account number and bank name to the backend
+      // Pass account number and bank code to the backend
       await withdrawFunds(
         {
+          account_bank: withdrawBankCode,
+          account_number: withdrawAccountNumber.trim(),
           amount: numericAmount,
-          accountNumber: withdrawAccountNumber.trim(),
-          bankName: withdrawBankName.trim(),
+          narration: 'Wallet withdrawal',
+          currency: 'NGN',
+          reference: undefined,
+          callback_url: undefined,
+          debit_currency: 'NGN',
         },
         token
       );
@@ -204,7 +288,8 @@ export default function WalletPage() {
       });
       setAmount('');
       setWithdrawAccountNumber('');
-      setWithdrawBankName('');
+      setWithdrawBankCode('');
+      setAccountName(null);
       setShowWithdrawModal(false);
       fetchBalance();
     } catch (err: any) {
@@ -230,6 +315,9 @@ export default function WalletPage() {
             onClick={() => {
               setShowWithdrawModal(false);
               setWithdrawError(null);
+              setWithdrawAccountNumber('');
+              setWithdrawBankCode('');
+              setAccountName(null);
             }}
             aria-label="Close"
             type="button"
@@ -239,31 +327,55 @@ export default function WalletPage() {
           <h2 className="text-lg font-semibold mb-4">Withdrawal Details</h2>
           <form onSubmit={handleWithdrawSubmit} className="space-y-4">
             <div>
+              <Label htmlFor="withdraw-bank-name">Bank</Label>
+              <select
+                id="withdraw-bank-name"
+                value={withdrawBankCode}
+                onChange={e => setWithdrawBankCode(e.target.value)}
+                disabled={isLoading || banks.length === 0}
+                className="w-full border rounded px-3 py-2 bg-background"
+                required
+              >
+                <option value="">Select Bank</option>
+                {banks.map((bank) => (
+                  <option key={bank.code} value={bank.code}>
+                    {bank.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
               <Label htmlFor="withdraw-account-number">Account Number</Label>
               <Input
                 id="withdraw-account-number"
                 type="text"
                 value={withdrawAccountNumber}
-                onChange={e => setWithdrawAccountNumber(e.target.value)}
+                onChange={e => {
+                  // Only allow numbers
+                  const val = e.target.value.replace(/\D/g, '');
+                  setWithdrawAccountNumber(val);
+                }}
                 disabled={isLoading}
-                maxLength={20}
+                maxLength={12}
+                minLength={10}
                 autoComplete="off"
                 required
               />
             </div>
-            <div>
-              <Label htmlFor="withdraw-bank-name">Bank Name</Label>
-              <Input
-                id="withdraw-bank-name"
-                type="text"
-                value={withdrawBankName}
-                onChange={e => setWithdrawBankName(e.target.value)}
-                disabled={isLoading}
-                maxLength={50}
-                autoComplete="off"
-                required
-              />
-            </div>
+            {isValidatingAccount && (
+              <div className="text-xs text-muted-foreground flex items-center gap-2">
+                <svg className="animate-spin h-4 w-4 mr-1 text-muted-foreground" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+                </svg>
+                Validating account...
+              </div>
+            )}
+            {accountName && (
+              <div className="text-green-700 text-sm">
+                Account Name: <span className="font-semibold">{accountName}</span>
+              </div>
+            )}
             {withdrawError && (
               <div className="text-destructive text-sm">{withdrawError}</div>
             )}
@@ -274,12 +386,15 @@ export default function WalletPage() {
                 onClick={() => {
                   setShowWithdrawModal(false);
                   setWithdrawError(null);
+                  setWithdrawAccountNumber('');
+                  setWithdrawBankCode('');
+                  setAccountName(null);
                 }}
                 disabled={isLoading}
               >
                 Cancel
               </Button>
-              <Button type="submit" disabled={isLoading}>
+              <Button type="submit" disabled={isLoading || isValidatingAccount || !accountName}>
                 {isLoading ? (
                   <span className="flex items-center justify-center">
                     <svg className="animate-spin h-4 w-4 mr-2 text-muted-foreground" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -360,6 +475,19 @@ export default function WalletPage() {
                     disabled={isLoading}
                   />
                 </div>
+              </div>
+              <div className="text-xs text-muted-foreground">
+                {amount && !isNaN(Number(amount)) && Number(amount) > 0 ? (
+                  <span>
+                    Payment processing fee (2.0%): ₦{(Number(amount) * 0.02).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}.<br />
+                    7.5% VAT on fee: ₦{(Number(amount) * 0.02 * 0.075).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}.<br />
+                    <strong>
+                      You will receive: ₦{(Number(amount) - (Number(amount) * 0.02 * 0.075)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </strong>
+                  </span>
+                ) : (
+                  <>Please note: 7.5% of the 2.0% payment processing fee will be deducted from your deposit amount.</>
+                )}
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <Button className="w-full" onClick={handleDeposit} disabled={isLoading || loadingBalance}>

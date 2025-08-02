@@ -1,5 +1,5 @@
 
-export const PUBLIC_FLUTTERWAVE_PUBLIC_KEY="FLWPUBK-1c1a78c3bd5cb0f567b1be96c2df6725-X"
+export const PUBLIC_FLUTTERWAVE_PUBLIC_KEY="FLWPUBK-5ee14d98f1a2564abaea36e4b3e74e81-X"
 
 
 export type Market = {
