@@ -95,14 +95,24 @@ export default function WalletPage() {
     const fetchBanks = async () => {
       try {
         const banksList = await getBanks(token as string);
-        setBanks(banksList || []);
+        // Some APIs return {data: {data: [...]}} and some {data: [...]}, so handle both
+        const banksArray =
+          Array.isArray(banksList?.data?.data)
+            ? banksList.data.data
+            : Array.isArray(banksList?.data)
+              ? banksList.data
+              : Array.isArray(banksList)
+                ? banksList
+                : [];
+        setBanks(banksArray);
       } catch (err: any) {
         setBanks([]);
-        toast({
-          title: 'Error',
-          description: err.message || 'Failed to fetch banks list.',
-          variant: 'destructive',
-        });
+        console.log(err)
+        // toast({
+        //   title: 'Error',
+        //   description: err.message || 'Failed to fetch banks list.',
+        //   variant: 'destructive',
+        // });
       }
     };
 
@@ -197,52 +207,44 @@ export default function WalletPage() {
   };
 
   // Validate account number when both bank and account number are present
-  useEffect(() => {
-    const validate = async () => {
-      setAccountName(null);
-      setWithdrawError(null);
-      if (
-        withdrawAccountNumber.trim().length >= 10 &&
-        withdrawBankCode &&
-        withdrawAccountNumber.trim().length <= 12 // allow for 10-12 digit accounts
-      ) {
-        setIsValidatingAccount(true);
-        try {
-          const result = await validateAccount({
-            account_number: withdrawAccountNumber.trim(),
-            account_bank: withdrawBankCode,
-          }, token as string);
-          if (result && result.account_name) {
-            setAccountName(result.account_name);
-            setWithdrawError(null);
-          } else {
-            setAccountName(null);
-            setWithdrawError('Account validation failed. Please check details.');
-          }
-        } catch (err: any) {
-          setAccountName(null);
-          setWithdrawError(
-            err.message || 'Failed to validate account. Please check details.'
-          );
-        } finally {
-          setIsValidatingAccount(false);
-        }
-      } else {
-        setAccountName(null);
-      }
-    };
-
-    // Only validate if both fields are filled
+  const validate = async () => {
+    setAccountName(null);
+    setWithdrawError(null);
     if (
       withdrawAccountNumber.trim().length >= 10 &&
-      withdrawBankCode
+      withdrawBankCode &&
+      withdrawAccountNumber.trim().length <= 12 // allow for 10-12 digit accounts
     ) {
-      validate();
+      setIsValidatingAccount(true);
+      try {
+        const result = await validateAccount({
+          account_number: withdrawAccountNumber.trim(),
+          account_bank: withdrawBankCode,
+        }, token as string);
+        if (result && result.account_name) {
+          setAccountName(result.account_name);
+          setWithdrawError(null);
+        } else {
+          setAccountName(null);
+          setWithdrawError('Account validation failed. Please check details.');
+        }
+      } catch (err: any) {
+        setAccountName(null);
+        setWithdrawError(
+          err.message || 'Failed to validate account. Please check details.'
+        );
+      } finally {
+        setIsValidatingAccount(false);
+      }
     } else {
       setAccountName(null);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [withdrawAccountNumber, withdrawBankCode]);
+  };
+
+  // useEffect(() => {
+    
+  //   // eslint-disable-next-line react-hooks/exhaustive-deps
+  // }, [withdrawAccountNumber, withdrawBankCode]);
 
   // Actual withdrawal after collecting account info
   const handleWithdrawSubmit = async (e: React.FormEvent) => {
@@ -335,7 +337,7 @@ export default function WalletPage() {
                 required
               >
                 <option value="">Select Bank</option>
-                {banks.map((bank) => (
+                {banks && banks.length > 0 && banks.map((bank) => (
                   <option key={bank.code} value={bank.code}>
                     {bank.name}
                   </option>
@@ -353,6 +355,7 @@ export default function WalletPage() {
                   const val = e.target.value.replace(/\D/g, '');
                   setWithdrawAccountNumber(val);
                 }}
+                onBlur={validate}
                 disabled={isLoading}
                 maxLength={12}
                 minLength={10}
