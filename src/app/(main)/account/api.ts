@@ -101,8 +101,15 @@ export async function withdrawFunds(
   );
 }
 
-export async function getBanks(token: string) {
-  return apiFetch('/wallets/banks/ng', { method: 'GET' }, token);
+export async function getBanks(token: string, country: string = "ng") {
+  // Explicitly set the Authorization header to ensure it's included
+  return apiFetch(
+    `/wallets/banks/${country}`,
+    {
+      method: 'GET'
+    },
+    token
+  );
 }
 
 export async function validateAccount(

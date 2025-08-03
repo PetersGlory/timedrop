@@ -25,7 +25,7 @@ import { getMarketById, placeOrder } from '../../account/api';
 import { useAuth } from '@/context/AuthContext';
 import { generateMarketHistory } from '@/lib/data';
 
-const TRADE_AMOUNTS = [1000, 5000, 10000, 20000, 50000, 100000, 200000, 500000];
+const TRADE_AMOUNTS = [1000, 5000, 10000, 20000, 50000, 100000, 200000];
 
 function ShareButton() {
   const handleShare = () => {
@@ -310,14 +310,14 @@ export default function MarketDetailPage({
                 This is a market where you can predict the outcome of a future event. Your response reflects your current belief.
               </p>
               <p>
-                You are going against other players for very specific singular outcomes.
+                You are going against other traders for very specific singular outcomes.
               </p>
               <ul className="list-disc pl-5 space-y-2">
                 <li>
                   Select an amount you want to trade.
                 </li>
                 <li>
-                  When an opposing order from another user matches, a trade occurs.
+                  When an opposing order from another trader matches, a trade occurs.
                 </li>
                 <li>
                   If you are correct, you get your trade back plus your profit.
@@ -391,7 +391,7 @@ function TradeForm({
   return (
     <div className="pt-4 space-y-4">
       <div className="space-y-2">
-        <Label>Trade to Contract</Label>
+        <Label>Trade Contract</Label>
         <div className="flex flex-wrap gap-2">
           {TRADE_AMOUNTS.map((amount) => (
             <Button
@@ -425,7 +425,7 @@ function TradeForm({
         </div>
         <div className="flex justify-between text-sm font-semibold">
           <span className="text-foreground">
-            Potential Payout:
+            Minimum Payout:
           </span>
           <span className="text-foreground">
             {(estimatedCost + maxProfit).toFixed(2)}

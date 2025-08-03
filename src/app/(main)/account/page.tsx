@@ -92,8 +92,6 @@ export default function WalletPage() {
     }
   };
 
-  // Fetch banks on mount
-  useEffect(() => {
     const fetchBanks = async () => {
       try {
         const banksList = await getBanks(token as string);
@@ -107,12 +105,12 @@ export default function WalletPage() {
         });
       }
     };
-    fetchBanks();
-  }, []);
+
 
   useEffect(() => {
     fetchBalance();
     fetchProfile();
+    fetchBanks();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
@@ -148,7 +146,7 @@ export default function WalletPage() {
       });
       return;
     }
-    setPendingAmount(numericAmount);
+    setPendingAmount(parseFloat(amount));
     const updatedAmount = numericAmount * 0.02 * 0.075;
     setIsLoading(true);
     handleFlutterwavePayment({
@@ -470,7 +468,10 @@ export default function WalletPage() {
                     placeholder="1000.00"
                     className="pl-8"
                     value={amount}
-                    onChange={(e) => setAmount(e.target.value)}
+                    onChange={(e) => {
+                      setAmount(e.target.value)
+                      setPendingAmount(e.target.valueAsNumber)
+                    }}
                     min="0"
                     disabled={isLoading}
                   />
@@ -491,7 +492,7 @@ export default function WalletPage() {
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <Button className="w-full" onClick={handleDeposit} disabled={isLoading || loadingBalance}>
-                  Deposit with Flutterwave
+                  Deposit
                 </Button>
                 <Button
                   className="w-full"
