@@ -32,7 +32,7 @@ export default function WalletPage() {
   const [amount, setAmount] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [pendingAmount, setPendingAmount] = useState<number | null>(null);
-  const [balance, setBalance] = useState<number | null>(null);
+  const [balance, setBalance] = useState<number | string | null>(null);
   const [userProfile, setUserProfile] = useState<any>();
   const [loadingBalance, setLoadingBalance] = useState(true);
 
@@ -56,7 +56,7 @@ export default function WalletPage() {
     try {
       const data = await getWalletBalance(token);
       // The backend now returns { wallet: { ... } }
-      if (data && data.wallet && typeof data.wallet.balance === 'number') {
+      if (data && data.wallet && data.wallet.balance != null) {
         setBalance(data.wallet.balance);
       } else {
         setBalance(null);
@@ -439,8 +439,8 @@ export default function WalletPage() {
                   <span className="animate-pulse text-muted-foreground">Loading...</span>
                 ) : (
                   balance !== null
-                    ? `₦${balance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-                    : <span className="text-destructive">₦0</span>
+                    ? `₦${typeof balance === 'number' ? balance.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",") : Number(balance).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`
+                    : <span className="text-destructive">₦0.00</span>
                 )}
               </div>
               <p className="text-xs text-muted-foreground">
