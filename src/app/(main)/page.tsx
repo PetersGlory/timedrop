@@ -59,7 +59,7 @@ export default function MarketsPage() {
   }, []);
 
   const activeMarkets = markets.filter(
-    (market) => !isPast(new Date(market.endDate))
+    (market) => !isPast(new Date(market.endDate)) && market?.status == "Open"
   );
   const closedMarkets = markets.filter((market) =>
     isPast(new Date(market.endDate))

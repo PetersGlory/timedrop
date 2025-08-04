@@ -13,6 +13,7 @@ export type Market = {
   history: { date: string; chance: number }[];
   startDate: string;
   endDate: string;
+  status: 'Open' | 'closed' | 'archieve';
 };
 
 export type Order = {

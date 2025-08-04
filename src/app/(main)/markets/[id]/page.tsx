@@ -25,7 +25,7 @@ import { getMarketById, placeOrder } from '../../account/api';
 import { useAuth } from '@/context/AuthContext';
 import { generateMarketHistory } from '@/lib/data';
 
-const TRADE_AMOUNTS = [1000, 5000, 10000, 20000, 50000, 100000, 200000];
+const TRADE_AMOUNTS = [5000, 10000, 20000, 50000, 100000, 200000];
 
 function ShareButton() {
   const handleShare = () => {
@@ -145,6 +145,14 @@ export default function MarketDetailPage({
 
 
   const handleOrderPlacement = async (side: 'Yes' | 'No') => {
+    if(market.status !== "Open"){
+      toast({
+        variant: 'destructive',
+        title: 'Order Error',
+        description: `Order is ${market?.status || "closed"}.`
+      })
+      return;
+    }
     if (tradeAmount === 0) {
       toast({
         variant: 'destructive',
