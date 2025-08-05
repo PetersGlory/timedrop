@@ -161,7 +161,8 @@ export default function WalletPage() {
     setIsLoading(true);
     handleFlutterwavePayment({
       callback: async (response: any) => {
-        if (response.status === 'successful') {
+        console.log(response)
+        if (response.status === 'successful' || response.status === 'completed' || response.status === 'success') {
           // Call backend to confirm and credit wallet
           try {
             if (!token) throw new Error('Not authenticated');
