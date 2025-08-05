@@ -33,7 +33,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = () => {
     setToken(null);
-    localStorage.removeItem('jwt_token');
+    localStorage.clear();
   };
 
   return (

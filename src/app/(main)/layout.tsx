@@ -148,6 +148,9 @@ export default function MainLayout({
             <Link href="#" className="transition-colors hover:text-primary">
               Blog
             </Link>
+            <Link href="/referral" className="transition-colors hover:text-primary">
+              Referral
+            </Link>
           </nav>
         </div>
       </footer>
