@@ -57,10 +57,10 @@ export default function ReferralPage() {
     <div className="container mx-auto max-w-xl py-12">
       <h1 className="text-3xl font-bold mb-4">Referral Program</h1>
       <p className="mb-6 text-muted-foreground">
-        Invite your friends to Timedrop and earn rewards! Share your unique referral link below. When your friends sign up and start trading, you both get bonuses.
+        Everyone you refer gets $500 in credit over 180 days. Once they have spent $200 with us, you'll get $50. There is no limit to the amount of credit you can earn through referrals.
       </p>
       <div className="mb-4">
-        <label className="block mb-2 font-medium">Your Referral Link</label>
+        <label className="block mb-2 font-medium">Your personal referral Link</label>
         <div className="flex gap-2">
           <Input
             value={referralLink}
@@ -72,16 +72,16 @@ export default function ReferralPage() {
           </Button>
         </div>
       </div>
-      <div className="mb-8">
+      {/* <div className="mb-8">
         <label className="block mb-2 font-medium">Your Referral Code</label>
         <Input value={referralCode} readOnly />
-      </div>
+      </div> */}
       <div className="bg-muted rounded-lg p-6">
         <h2 className="text-lg font-semibold mb-2">How it works</h2>
         <ul className="list-disc pl-5 text-muted-foreground space-y-1">
           <li>Share your referral link or code with friends.</li>
           <li>When they register and make their first trade, you both earn a reward.</li>
-          <li>Track your referrals and rewards in your account dashboard (coming soon).</li>
+          {/* <li>Track your referrals and rewards in your account dashboard (coming soon).</li> */}
         </ul>
       </div>
     </div>

@@ -21,15 +21,20 @@ import { toast } from '@/hooks/use-toast';
 import { CountdownTimer } from '@/components/countdown-timer';
 import { Share2 } from 'lucide-react';
 import { isPast } from 'date-fns';
-import { getMarketById, placeOrder } from '../../account/api';
+import { getMarketById, getProfile, placeOrder } from '../../account/api';
 import { useAuth } from '@/context/AuthContext';
 import { generateMarketHistory } from '@/lib/data';
 
 const TRADE_AMOUNTS = [5000, 10000, 20000, 50000, 100000, 200000];
 
-function ShareButton() {
+function ShareButtonFull(referralCode:any) {
+  const referralLink = typeof window !== 'undefined'
+  ? `${window.location.origin}/register?ref=${referralCode}`
+  : `/register?ref=${referralCode}`;
+
+
   const handleShare = () => {
-    navigator.clipboard.writeText(window.location.href.split('?')[0]);
+    navigator.clipboard.writeText(referralLink);
     toast({
       title: 'Link Copied!',
       description: 'The market link has been copied to your clipboard.',
@@ -38,26 +43,11 @@ function ShareButton() {
   return (
     <Button variant="outline" size="icon" onClick={handleShare}>
       <Share2 className="h-4 w-4" />
-      <span className="sr-only">Share Market</span>
+      <span className="sr-only">Refer a Friend</span>
     </Button>
   );
 }
 
-function ShareButtonFull() {
-  const handleShare = () => {
-    navigator.clipboard.writeText(window.location.href.split('?')[0]);
-    toast({
-      title: 'Link Copied!',
-      description: 'The market link has been copied to your clipboard.',
-    });
-  };
-  return (
-    <Button variant="outline" className="w-full" onClick={handleShare}>
-      <Share2 className="h-4 w-4 mr-2" />
-      Share Market
-    </Button>
-  );
-}
 
 export default function MarketDetailPage({
   params,
@@ -70,6 +60,7 @@ export default function MarketDetailPage({
   const [error, setError] = useState<string | null>(null);
   const [tradeAmount, setTradeAmount] = useState(0);
   const searchParams = useSearchParams();
+  const [referralCode, setReferralCode] = useState<string>('');
   const {token} = useAuth()
   
   const side = searchParams.get('no') === 'true' ? 'no' : 'yes';
@@ -96,7 +87,43 @@ export default function MarketDetailPage({
       }
     }
     fetchMarket();
+    getProfileInfo()
   }, []);
+
+  function ShareButton() {
+    const referralLink = typeof window !== 'undefined'
+    ? `${window.location.origin}/register?ref=${referralCode}`
+    : `/register?ref=${referralCode}`;
+
+
+    const handleShare = () => {
+      navigator.clipboard.writeText(referralLink);
+      toast({
+        title: 'Link Copied!',
+        description: 'The market link has been copied to your clipboard.',
+      });
+    };
+    return (
+      <Button variant="outline" size="icon" onClick={handleShare}>
+        <Share2 className="h-4 w-4" />
+        <span className="sr-only">Refer a Friend</span>
+      </Button>
+    );
+  }
+  
+
+  const getProfileInfo = async () => {
+    setLoading(true)
+    try{
+        const token = localStorage.getItem('jwt_token');
+        const profile = await getProfile(token as string);
+        setReferralCode(profile?.timedropId);
+    }catch(err){
+        console.log(err)
+    }finally{
+        setLoading(false)
+    }
+  }
 
   // ✅ Conditional returns come after all hooks
   if (loading) {
@@ -359,6 +386,7 @@ export default function MarketDetailPage({
                       estimatedCost={estimatedCost}
                       maxProfit={maxProfit}
                       onOrderPlacement={() => handleOrderPlacement('Yes')}
+                      referralCode={referralCode}
                     />
                   </TabsContent>
                   <TabsContent value="no">
@@ -369,6 +397,7 @@ export default function MarketDetailPage({
                       estimatedCost={estimatedCost}
                       maxProfit={maxProfit}
                       onOrderPlacement={() => handleOrderPlacement('No')}
+                      referralCode={referralCode}
                     />
                   </TabsContent>
                 </Tabs>
@@ -388,6 +417,7 @@ function TradeForm({
   estimatedCost,
   maxProfit,
   onOrderPlacement,
+  referralCode
 }: {
   side: 'Yes' | 'No';
   tradeAmount: number;
@@ -395,6 +425,7 @@ function TradeForm({
   estimatedCost: number;
   maxProfit: number;
   onOrderPlacement: () => void;
+  referralCode: string;
 }) {
   return (
     <div className="pt-4 space-y-4">
@@ -447,7 +478,7 @@ function TradeForm({
         >
           BUY {side.toUpperCase()}
         </Button>
-        <ShareButtonFull />
+        <ShareButtonFull referralCode={referralCode} />
       </div>
     </div>
   );

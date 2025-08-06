@@ -200,6 +200,14 @@ export default function WalletPage() {
 
   // Open modal to collect withdrawal details
   const handleWithdraw = () => {
+    if (Number(amount) > Number(balance)) {
+      toast({
+        title: 'Insufficient Balance',
+        description: 'You do not have enough funds in your wallet to withdraw this amount.',
+        variant: 'destructive',
+      });
+      return;
+    }
     setWithdrawError(null);
     setShowWithdrawModal(true);
     setWithdrawAccountNumber('');
