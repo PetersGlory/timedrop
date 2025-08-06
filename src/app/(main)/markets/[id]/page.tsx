@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { notFound, useSearchParams } from 'next/navigation';
+import { notFound, useRouter, useSearchParams } from 'next/navigation';
 import {
   Card,
   CardContent,
@@ -19,7 +19,7 @@ import {
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from 'recharts';
 import { toast } from '@/hooks/use-toast';
 import { CountdownTimer } from '@/components/countdown-timer';
-import { Share2 } from 'lucide-react';
+import { ArrowLeft, Share2 } from 'lucide-react';
 import { isPast } from 'date-fns';
 import { getMarketById, getProfile, placeOrder } from '../../account/api';
 import { useAuth } from '@/context/AuthContext';
@@ -27,11 +27,11 @@ import { generateMarketHistory } from '@/lib/data';
 
 const TRADE_AMOUNTS = [5000, 10000, 20000, 50000, 100000, 200000];
 
-function ShareButtonFull(referralCode:any) {
-  const referralLink = typeof window !== 'undefined'
-  ? `${window.location.origin}/register?ref=${referralCode}`
-  : `/register?ref=${referralCode}`;
-
+function ShareButtonFull(referralCode: any) {
+  const referralLink =
+    typeof window !== 'undefined'
+      ? `${window.location.origin}/register?ref=${referralCode}`
+      : `/register?ref=${referralCode}`;
 
   const handleShare = () => {
     navigator.clipboard.writeText(referralLink);
@@ -41,13 +41,18 @@ function ShareButtonFull(referralCode:any) {
     });
   };
   return (
-    <Button variant="outline" className="w-full" size="icon" onClick={handleShare}>
+    <Button
+      variant="outline"
+      className="w-full flex items-center justify-center"
+      size="icon"
+      onClick={handleShare}
+    >
       <Share2 className="h-4 w-4 mr-2" />
-      Share your personalized link for this market with your friends
+      <span className="inline xs:hidden">Share personalized market link</span>
+      <span className="inline md:hidden">Share</span>
     </Button>
   );
 }
-
 
 export default function MarketDetailPage({
   params,
@@ -61,9 +66,12 @@ export default function MarketDetailPage({
   const [tradeAmount, setTradeAmount] = useState(0);
   const searchParams = useSearchParams();
   const [referralCode, setReferralCode] = useState<string>('');
-  const {token} = useAuth()
-  
-  const side = searchParams.get('no') === 'true' ? 'no' : 'yes';
+  const { token } = useAuth();
+  const router = useRouter();
+
+  const side = searchParams.get('side') === 'no' ? 'no' : 'yes';
+
+  console.log(side)
   const defaultTab = side === 'no' ? 'no' : 'yes';
 
   async function fetchMarket() {
@@ -89,13 +97,14 @@ export default function MarketDetailPage({
   useEffect(() => {
     fetchMarket();
     getProfileInfo();
+    // eslint-disable-next-line
   }, []);
 
   function ShareButton() {
-    const referralLink = typeof window !== 'undefined'
-    ? `${window.location.origin}/register?ref=${referralCode}`
-    : `/register?ref=${referralCode}`;
-
+    const referralLink =
+      typeof window !== 'undefined'
+        ? `${window.location.origin}/register?ref=${referralCode}`
+        : `/register?ref=${referralCode}`;
 
     const handleShare = () => {
       navigator.clipboard.writeText(referralLink);
@@ -105,26 +114,30 @@ export default function MarketDetailPage({
       });
     };
     return (
-      <Button variant="outline" size="icon" onClick={handleShare}>
+      <Button
+        variant="outline"
+        size="icon"
+        onClick={handleShare}
+        className="flex items-center justify-center"
+      >
         <Share2 className="h-4 w-4" />
         <span className="sr-only">Refer a Friend</span>
       </Button>
     );
   }
-  
 
   const getProfileInfo = async () => {
-    setLoading(true)
-    try{
-        const token = localStorage.getItem('jwt_token');
-        const profile = await getProfile(token as string);
-        setReferralCode(profile?.timedropId);
-    }catch(err){
-        console.log(err)
-    }finally{
-        setLoading(false)
+    setLoading(true);
+    try {
+      const token = localStorage.getItem('jwt_token');
+      const profile = await getProfile(token as string);
+      setReferralCode(profile?.timedropId);
+    } catch (err) {
+      console.log(err);
+    } finally {
+      setLoading(false);
     }
-  }
+  };
 
   // ✅ Conditional returns come after all hooks
   if (loading) {
@@ -155,14 +168,10 @@ export default function MarketDetailPage({
           Loading market details. Please wait...
         </span>
       </div>
-    )
+    );
   }
 
-  if (!loading && (error || !market)) {
-    notFound();
-  }
-
-  const isMarketClosed = isPast(new Date(market.endDate));
+  const isMarketClosed = isPast(new Date(market?.endDate));
 
   const chartConfig = {
     chance: {
@@ -171,14 +180,13 @@ export default function MarketDetailPage({
     },
   };
 
-
   const handleOrderPlacement = async (side: 'Yes' | 'No') => {
-    if(market.status !== "Open"){
+    if (market.status !== 'Open') {
       toast({
         variant: 'destructive',
         title: 'Order Error',
-        description: `Order is ${market?.status || "closed"}.`
-      })
+        description: `Order is ${market?.status || 'closed'}.`,
+      });
       return;
     }
     if (tradeAmount === 0) {
@@ -199,14 +207,14 @@ export default function MarketDetailPage({
       return;
     }
 
-    setLoading(true)
+    setLoading(true);
     try {
       await placeOrder(
         {
           marketId: market.id,
-          type: side.toUpperCase() === "YES" ? "BUY" : "SELL", // 'YES' or 'NO'
+          type: side.toUpperCase() === 'YES' ? 'BUY' : 'SELL', // 'YES' or 'NO'
           quantity: tradeAmount,
-          price: tradeAmount
+          price: tradeAmount,
         },
         token
       );
@@ -222,27 +230,82 @@ export default function MarketDetailPage({
         title: 'Order Failed',
         description: err.message || 'Failed to place order. Please try again.',
       });
-    }finally{
-      setLoading(false)
+    } finally {
+      setLoading(false);
     }
   };
 
   const estimatedCost = tradeAmount;
   const maxProfit = tradeAmount;
 
+  if (!loading && !market) {
+    if (error) {
+      console.error('Market loading error:', error);
+    }
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[40vh]">
+        <svg
+          className="h-10 w-10 text-destructive mb-4"
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+          aria-hidden="true"
+        >
+          <circle
+            className="opacity-25"
+            cx="12"
+            cy="12"
+            r="10"
+            stroke="currentColor"
+            strokeWidth="4"
+          />
+          <path
+            className="opacity-75"
+            fill="currentColor"
+            d="M12 2a10 10 0 1 1 0 20 10 10 0 0 1 0-20zm1 5h-2v6h2V7zm0 8h-2v2h2v-2z"
+          />
+        </svg>
+        <span className="text-lg font-semibold text-destructive mb-2">
+          Market Not Found
+        </span>
+        <span className="text-muted-foreground mb-4">
+          The market you are looking for does not exist or is unavailable.
+        </span>
+        <button
+          type='button'
+          onClick={()=> router.back()}
+          className="inline-flex items-center px-4 py-2 bg-primary text-white rounded hover:bg-primary/90 transition"
+        >
+          Browse Markets
+        </button>
+      </div>
+    );
+  }
+
   return (
-    <div className="container mx-auto">
-      <div className="grid lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 space-y-8">
+    <div className="container mx-auto px-2 sm:px-4">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
+        {/* Main Content */}
+        <div className="lg:col-span-2 space-y-6 lg:space-y-8">
           <Card>
             <CardHeader>
-              <div className="flex justify-between items-start">
-                <div>
-                  <CardTitle className="text-3xl font-bold">
-                    {market.question}
-                  </CardTitle>
-                  <div className="flex items-center gap-2 pt-1 text-sm text-muted-foreground">
-                    <CountdownTimer endDate={market.endDate} />
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-2">
+                    <button
+                      type='button'
+                      onClick={()=> router.back()}
+                      className="inline-flex items-center px-2 py-1 text-sm rounded hover:bg-muted transition"
+                      aria-label="Back to Markets"
+                    >
+                      <ArrowLeft />
+                    </button>
+                    <CardTitle className="text-2xl sm:text-3xl font-bold break-words">
+                      {market.question}
+                    </CardTitle>
+                  </div>
+                  <div className="flex items-center gap-2 pt-1 text-sm text-muted-foreground flex-wrap">
+                    <CountdownTimer endDate={market?.endDate} />
                   </div>
                   {/* Show category if available */}
                   {market.category && (
@@ -251,92 +314,102 @@ export default function MarketDetailPage({
                     </div>
                   )}
                 </div>
-                <ShareButton />
+                <div className="flex-shrink-0 mt-2 sm:mt-0">
+                  <ShareButton />
+                </div>
               </div>
             </CardHeader>
             <CardContent>
               {/* Show image if available */}
               {market.image && market.image.url && (
                 <div className="mb-6">
-                  <div className="flex justify-center items-center w-full h-64 mb-4">
+                  <div className="flex justify-center items-center w-full h-48 sm:h-64 mb-4">
                     <img
                       src={market.image.url}
                       alt={market.image.hint || 'Market image'}
-                      className="max-h-full max-w-full object-contain rounded-md border"
+                      className="max-h-full max-w-full object-contain rounded-md border w-full"
+                      style={{ maxHeight: '16rem' }}
                     />
                   </div>
-                  {/* {market.image.hint && (
-                    <div className="text-xs text-muted-foreground mt-1 text-center">
-                      {market.image.hint}
-                    </div>
-                  )} */}
                 </div>
               )}
-              <div className="h-96 w-full">
-                <ChartContainer config={chartConfig} className="h-full w-full">
-                  <AreaChart
-                    accessibilityLayer
-                    data={generateMarketHistory(market.startDate, market.endDate,50)}
-                    margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
-                  >
-                    <CartesianGrid vertical={false} />
-                    <XAxis
-                      dataKey="date"
-                      tickLine={false}
-                      axisLine={false}
-                      tickMargin={8}
-                      tickFormatter={(value, index) => {
-                        // Show every 4th hour label to prevent clutter
-                        if (index % 4 === 0) {
-                          return value;
+              <div className="w-full" style={{ minHeight: '250px' }}>
+                <div className="h-60 sm:h-96 w-full">
+                  <ChartContainer config={chartConfig} className="h-full w-full">
+                    <AreaChart
+                      accessibilityLayer
+                      data={generateMarketHistory(
+                        market?.startDate,
+                        market?.endDate,
+                        50
+                      )}
+                      margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+                      width={undefined}
+                      height={undefined}
+                    >
+                      <CartesianGrid vertical={false} />
+                      <XAxis
+                        dataKey="date"
+                        tickLine={false}
+                        axisLine={false}
+                        tickMargin={8}
+                        tickFormatter={(value, index) => {
+                          // Show every 4th hour label to prevent clutter
+                          if (index % 4 === 0) {
+                            return value;
+                          }
+                          return '';
+                        }}
+                      />
+                      <YAxis
+                        tickLine={false}
+                        axisLine={false}
+                        tickMargin={8}
+                        domain={[0, 100]}
+                        tickFormatter={(value) => `${value}%`}
+                      />
+                      <ChartTooltip
+                        cursor={false}
+                        content={
+                          <ChartTooltipContent
+                            formatter={(value) => `${value}%`}
+                          />
                         }
-                        return '';
-                      }}
-                    />
-                    <YAxis
-                      tickLine={false}
-                      axisLine={false}
-                      tickMargin={8}
-                      domain={[0, 100]}
-                      tickFormatter={(value) => `${value}%`}
-                    />
-                    <ChartTooltip
-                      cursor={false}
-                      content={<ChartTooltipContent formatter={(value) => `${value}%`} />}
-                    />
-                    <defs>
-                      <linearGradient
-                        id="fillChance"
-                        x1="0"
-                        y1="0"
-                        x2="0"
-                        y2="1"
-                      >
-                        <stop
-                          offset="5%"
-                          stopColor="var(--color-chance)"
-                          stopOpacity={0.8}
-                        />
-                        <stop
-                          offset="95%"
-                          stopColor="var(--color-chance)"
-                          stopOpacity={0.1}
-                        />
-                      </linearGradient>
-                    </defs>
-                    <Area
-                      dataKey="chance"
-                      type="natural"
-                      fill="url(#fillChance)"
-                      stroke="var(--color-chance)"
-                      stackId="a"
-                    />
-                  </AreaChart>
-                </ChartContainer>
+                      />
+                      <defs>
+                        <linearGradient
+                          id="fillChance"
+                          x1="0"
+                          y1="0"
+                          x2="0"
+                          y2="1"
+                        >
+                          <stop
+                            offset="5%"
+                            stopColor="var(--color-chance)"
+                            stopOpacity={0.8}
+                          />
+                          <stop
+                            offset="95%"
+                            stopColor="var(--color-chance)"
+                            stopOpacity={0.1}
+                          />
+                        </linearGradient>
+                      </defs>
+                      <Area
+                        dataKey="chance"
+                        type="natural"
+                        fill="url(#fillChance)"
+                        stroke="var(--color-chance)"
+                        stackId="a"
+                      />
+                    </AreaChart>
+                  </ChartContainer>
+                </div>
               </div>
             </CardContent>
           </Card>
-          
+
           <Card>
             <CardHeader>
               <CardTitle>How It Works</CardTitle>
@@ -363,8 +436,9 @@ export default function MarketDetailPage({
           </Card>
         </div>
 
+        {/* Sidebar / Place Order */}
         <div className="lg:col-span-1">
-          <Card className="sticky top-20">
+          <Card className="sticky top-20 z-10 w-full max-w-full">
             <CardHeader>
               <CardTitle>Place Order</CardTitle>
             </CardHeader>
@@ -376,8 +450,18 @@ export default function MarketDetailPage({
               ) : (
                 <Tabs defaultValue={defaultTab} className="w-full">
                   <TabsList className="grid w-full grid-cols-2">
-                    <TabsTrigger value="yes" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Yes</TabsTrigger>
-                    <TabsTrigger value="no" className="data-[state=active]:bg-pink-600 data-[state=active]:text-white">No</TabsTrigger>
+                    <TabsTrigger
+                      value="yes"
+                      className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+                    >
+                      Yes
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value="no"
+                      className="data-[state=active]:bg-pink-600 data-[state=active]:text-white"
+                    >
+                      No
+                    </TabsTrigger>
                   </TabsList>
                   <TabsContent value="yes">
                     <TradeForm
@@ -418,7 +502,7 @@ function TradeForm({
   estimatedCost,
   maxProfit,
   onOrderPlacement,
-  referralCode
+  referralCode,
 }: {
   side: 'Yes' | 'No';
   tradeAmount: number;
@@ -436,12 +520,10 @@ function TradeForm({
           {TRADE_AMOUNTS.map((amount) => (
             <Button
               key={`trade-${amount}`}
-              variant={
-                tradeAmount === amount ? 'default' : 'outline'
-              }
+              variant={tradeAmount === amount ? 'default' : 'outline'}
               size="sm"
               onClick={() => setTradeAmount(amount)}
-              className="flex-grow"
+              className="flex-grow min-w-[40%] sm:min-w-[120px] max-w-[48%] sm:max-w-[160px] text-xs sm:text-sm"
             >
               {amount.toLocaleString()}
             </Button>
@@ -450,12 +532,8 @@ function TradeForm({
       </div>
       <div className="border-t pt-4 space-y-2">
         <div className="flex justify-between text-sm">
-          <span className="text-muted-foreground">
-            Your Contract:
-          </span>
-          <span className="font-medium">
-            {estimatedCost.toFixed(2)}
-          </span>
+          <span className="text-muted-foreground">Your Contract:</span>
+          <span className="font-medium">{estimatedCost.toFixed(2)}</span>
         </div>
         <div className="flex justify-between text-sm">
           <span className="text-muted-foreground">Profit:</span>
@@ -464,19 +542,14 @@ function TradeForm({
           </span>
         </div>
         <div className="flex justify-between text-sm font-semibold">
-          <span className="text-foreground">
-            Minimum Payout:
-          </span>
+          <span className="text-foreground">Minimum Payout:</span>
           <span className="text-foreground">
             {(estimatedCost + maxProfit).toFixed(2)}
           </span>
         </div>
       </div>
       <div className="space-y-2">
-        <Button
-          className="w-full"
-          onClick={onOrderPlacement}
-        >
+        <Button className="w-full" onClick={onOrderPlacement}>
           BUY {side.toUpperCase()}
         </Button>
         <ShareButtonFull referralCode={referralCode} />
