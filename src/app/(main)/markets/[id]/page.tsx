@@ -41,9 +41,9 @@ function ShareButtonFull(referralCode:any) {
     });
   };
   return (
-    <Button variant="outline" size="icon" onClick={handleShare}>
-      <Share2 className="h-4 w-4" />
-      <span className="sr-only">Refer a Friend</span>
+    <Button variant="outline" className="w-full" size="icon" onClick={handleShare}>
+      <Share2 className="h-4 w-4 mr-2" />
+      Share your personalized link for this market with your friends
     </Button>
   );
 }
@@ -66,28 +66,29 @@ export default function MarketDetailPage({
   const side = searchParams.get('no') === 'true' ? 'no' : 'yes';
   const defaultTab = side === 'no' ? 'no' : 'yes';
 
-  useEffect(() => {
-    async function fetchMarket() {
-      const newParams = await params;
-      setLoading(true);
-      setError(null);
-      try {
-        const data = await getMarketById(newParams?.id);
-        if (!data || !data.market) {
-          setError('Market not found');
-          setMarket(null);
-        } else {
-          setMarket(data.market);
-        }
-      } catch (err: any) {
-        setError(err.message || 'Failed to load market');
+  async function fetchMarket() {
+    const newParams = await params;
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await getMarketById(newParams?.id);
+      if (!data || !data.market) {
+        setError('Market not found');
         setMarket(null);
-      } finally {
-        setLoading(false);
+      } else {
+        setMarket(data.market);
       }
+    } catch (err: any) {
+      setError(err.message || 'Failed to load market');
+      setMarket(null);
+    } finally {
+      setLoading(false);
     }
+  }
+
+  useEffect(() => {
     fetchMarket();
-    getProfileInfo()
+    getProfileInfo();
   }, []);
 
   function ShareButton() {
@@ -157,7 +158,7 @@ export default function MarketDetailPage({
     )
   }
 
-  if (error || !market) {
+  if (!loading && (error || !market)) {
     notFound();
   }
 

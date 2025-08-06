@@ -149,7 +149,7 @@ export default function MainLayout({
               Blog
             </Link>
             <Link href="/referral" className="transition-colors hover:text-primary">
-              Referral
+              Referral $
             </Link>
           </nav>
         </div>
