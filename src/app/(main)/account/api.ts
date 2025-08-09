@@ -117,7 +117,7 @@ export async function validateAccount(
   token: string
 ) {
   return apiFetch(
-    '/verify-account',
+    '/wallets/verify-account',
     {
       method: 'POST',
       body: JSON.stringify({
