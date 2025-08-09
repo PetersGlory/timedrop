@@ -174,7 +174,16 @@ export default function WalletPage() {
           // Call backend to confirm and credit wallet
           try {
             if (!token) throw new Error('Not authenticated');
-            await depositFunds((numericAmount - updatedAmount), token);
+            const dataJson = {
+              amount: (numericAmount - updatedAmount),
+              narration: 'Wallet deposit via Flutterwave',
+              currency: 'NGN',
+              reference: response.transaction_id,
+              payment_method: response.meta.payment_method,
+              tx_ref: response.tx_ref,
+              status: response.status,
+            }
+            await depositFunds(dataJson, token);
             toast({
               title: 'Deposit Successful',
               description: `₦${numericAmount.toLocaleString()} has been added to your wallet.`,
@@ -279,10 +288,6 @@ export default function WalletPage() {
     }
   };
 
-  // useEffect(() => {
-    
-  //   // eslint-disable-next-line react-hooks/exhaustive-deps
-  // }, [withdrawAccountNumber, withdrawBankCode]);
 
   // Actual withdrawal after collecting account info
   const handleWithdrawSubmit = async (e: React.FormEvent) => {
@@ -302,6 +307,8 @@ export default function WalletPage() {
       setWithdrawError('Please validate your account details before withdrawing.');
       return;
     }
+    // Calculate the transaction fee: 7.5% of 1% of the amount
+    const transactionFee = numericAmount * 0.01 * 0.075;
     setIsLoading(true);
     try {
       if (!token) throw new Error('Not authenticated');
@@ -311,6 +318,7 @@ export default function WalletPage() {
           account_bank: withdrawBankCode,
           account_number: withdrawAccountNumber.trim(),
           amount: numericAmount,
+          transaction_fee: transactionFee,
           narration: 'Wallet withdrawal',
           currency: 'NGN',
           reference: undefined,

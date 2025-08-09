@@ -59,11 +59,10 @@ export default function TransactionsPage() {
   const [filterType, setFilterType] = useState<'all' | 'deposit' | 'withdrawal'>('all');
   const [filterStatus, setFilterStatus] = useState<'all' | 'pending' | 'completed' | 'failed' | 'cancelled'>('all');
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [totalTransactions, setTotalTransactions] = useState(0);
+  const [itemsPerPage, setItemsPerPage] = useState(10); // Items per page for frontend pagination
 
-  // Fetch transactions
-  const fetchTransactions = async (page: number = 1) => {
+  // Fetch transactions (now without pagination parameters)
+  const fetchTransactions = async () => {
     if (!token) {
       setTransactions([]);
       setLoading(false);
@@ -72,16 +71,13 @@ export default function TransactionsPage() {
 
     setLoading(true);
     try {
-      const response = await getTransactions(token, page, 20, filterType);
+      // Fetch all transactions without pagination parameters
+      const response = await getTransactions(token, 1, 1000, filterType); // Get large number to fetch all
       
       // Handle different response formats
       const transactionsData = response?.transactions || response?.data?.transactions || response?.data || [];
-      const pagination = response?.pagination || response?.meta || {};
       
       setTransactions(transactionsData);
-      setTotalPages(pagination?.totalPages || pagination?.last_page || 1);
-      setTotalTransactions(pagination?.total || pagination?.total_count || transactionsData.length);
-      setCurrentPage(page);
     } catch (error: any) {
       toast({
         title: 'Error',
@@ -90,8 +86,6 @@ export default function TransactionsPage() {
       });
       // Set mock data for development/testing
       setTransactions(getMockTransactions());
-      setTotalPages(1);
-      setTotalTransactions(5);
     } finally {
       setLoading(false);
     }
@@ -172,7 +166,9 @@ export default function TransactionsPage() {
   ];
 
   useEffect(() => {
-    fetchTransactions(1);
+    fetchTransactions();
+    // Reset to first page when filters change
+    setCurrentPage(1);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token, filterType]);
 
@@ -185,6 +181,25 @@ export default function TransactionsPage() {
     
     return matchesSearch && matchesStatus;
   });
+
+  // Calculate pagination for filtered results
+  const totalFilteredTransactions = filteredTransactions.length;
+  const totalPages = Math.ceil(totalFilteredTransactions / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedTransactions = filteredTransactions.slice(startIndex, endIndex);
+
+  // Handle page navigation
+  const goToPage = (page: number) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
+
+  // Reset to first page when search, status filter, or items per page changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, filterStatus, itemsPerPage]);
 
   // Get status badge variant
   const getStatusBadge = (status: string) => {
@@ -234,7 +249,7 @@ export default function TransactionsPage() {
               <Calendar className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{totalTransactions}</div>
+              <div className="text-2xl font-bold">{transactions.length}</div>
               <p className="text-xs text-muted-foreground">All time transactions</p>
             </CardContent>
           </Card>
@@ -246,7 +261,7 @@ export default function TransactionsPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {filteredTransactions.filter(t => t.type === 'deposit' && t.status === 'completed').length}
+                {transactions.filter(t => t.type === 'deposit' && t.status === 'completed').length}
               </div>
               <p className="text-xs text-muted-foreground">Completed deposits</p>
             </CardContent>
@@ -259,7 +274,7 @@ export default function TransactionsPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {filteredTransactions.filter(t => t.type === 'withdrawal' && t.status === 'completed').length}
+                {transactions.filter(t => t.type === 'withdrawal' && t.status === 'completed').length}
               </div>
               <p className="text-xs text-muted-foreground">Completed withdrawals</p>
             </CardContent>
@@ -318,7 +333,7 @@ export default function TransactionsPage() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => fetchTransactions(currentPage)}
+                  onClick={() => fetchTransactions()}
                   disabled={loading}
                 >
                   <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
@@ -341,7 +356,7 @@ export default function TransactionsPage() {
                 <RefreshCw className="h-6 w-6 animate-spin text-muted-foreground" />
                 <span className="ml-2 text-muted-foreground">Loading transactions...</span>
               </div>
-            ) : filteredTransactions.length === 0 ? (
+            ) : paginatedTransactions.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-64 text-center">
                 <Calendar className="h-12 w-12 text-muted-foreground mb-4" />
                 <h3 className="text-lg font-semibold mb-2">No transactions found</h3>
@@ -365,7 +380,7 @@ export default function TransactionsPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredTransactions.map((transaction) => (
+                  {paginatedTransactions.map((transaction) => (
                     <TableRow key={transaction.id}>
                       <TableCell>
                         <div className="flex items-center gap-2">
@@ -425,27 +440,111 @@ export default function TransactionsPage() {
           </CardContent>
         </Card>
 
-        {/* Pagination */}
+        {/* Enhanced Frontend Pagination */}
         {totalPages > 1 && (
           <Card>
-            <CardContent className="flex items-center justify-between p-4">
-              <div className="text-sm text-muted-foreground">
-                Showing {((currentPage - 1) * 20) + 1} to {Math.min(currentPage * 20, totalTransactions)} of {totalTransactions} transactions
+            <CardContent className="flex flex-col gap-4 p-4 md:flex-row md:items-center md:justify-between">
+              <div className="flex flex-col gap-2 text-sm text-muted-foreground md:flex-row md:items-center md:gap-4">
+                <div>
+                  Showing {startIndex + 1} to {Math.min(endIndex, totalFilteredTransactions)} of {totalFilteredTransactions} transactions
+                  {totalFilteredTransactions !== transactions.length && (
+                    <span className="ml-1">
+                      (filtered from {transactions.length} total)
+                    </span>
+                  )}
+                </div>
+                
+                {/* Items per page selector */}
+                <div className="flex items-center gap-2">
+                  <span className="text-xs">Show:</span>
+                  <select
+                    value={itemsPerPage}
+                    onChange={(e) => setItemsPerPage(Number(e.target.value))}
+                    className="flex h-8 w-16 rounded-md border border-input bg-background px-2 py-1 text-xs ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    <option value={5}>5</option>
+                    <option value={10}>10</option>
+                    <option value={20}>20</option>
+                    <option value={50}>50</option>
+                    <option value={100}>100</option>
+                  </select>
+                  <span className="text-xs">per page</span>
+                </div>
               </div>
-              <div className="flex gap-2">
+              
+              <div className="flex items-center gap-2">
+                {/* Previous button */}
                 <Button
                   variant="outline"
                   size="sm"
-                  disabled={currentPage <= 1 || loading}
-                  onClick={() => fetchTransactions(currentPage - 1)}
+                  disabled={currentPage <= 1}
+                  onClick={() => goToPage(currentPage - 1)}
                 >
                   Previous
                 </Button>
+                
+                {/* Page numbers */}
+                <div className="flex items-center gap-1">
+                  {/* First page */}
+                  {currentPage > 3 && (
+                    <>
+                      <Button
+                        variant={1 === currentPage ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => goToPage(1)}
+                        className="w-8 h-8 p-0"
+                      >
+                        1
+                      </Button>
+                      {currentPage > 4 && (
+                        <span className="text-muted-foreground px-1">...</span>
+                      )}
+                    </>
+                  )}
+                  
+                  {/* Pages around current */}
+                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                    const pageNum = Math.max(1, Math.min(totalPages - 4, currentPage - 2)) + i;
+                    if (pageNum <= totalPages) {
+                      return (
+                        <Button
+                          key={pageNum}
+                          variant={pageNum === currentPage ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => goToPage(pageNum)}
+                          className="w-8 h-8 p-0"
+                        >
+                          {pageNum}
+                        </Button>
+                      );
+                    }
+                    return null;
+                  })}
+                  
+                  {/* Last page */}
+                  {currentPage < totalPages - 2 && (
+                    <>
+                      {currentPage < totalPages - 3 && (
+                        <span className="text-muted-foreground px-1">...</span>
+                      )}
+                      <Button
+                        variant={totalPages === currentPage ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => goToPage(totalPages)}
+                        className="w-8 h-8 p-0"
+                      >
+                        {totalPages}
+                      </Button>
+                    </>
+                  )}
+                </div>
+                
+                {/* Next button */}
                 <Button
                   variant="outline"
                   size="sm"
-                  disabled={currentPage >= totalPages || loading}
-                  onClick={() => fetchTransactions(currentPage + 1)}
+                  disabled={currentPage >= totalPages}
+                  onClick={() => goToPage(currentPage + 1)}
                 >
                   Next
                 </Button>

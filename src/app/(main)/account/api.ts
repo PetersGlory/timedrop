@@ -61,10 +61,10 @@ export async function getWalletBalance(token: string) {
 }
 
 // Deposit funds (after successful Flutterwave payment)
-export async function depositFunds(amount: number, token: string) {
+export async function depositFunds(data: any, token: string) {
   return apiFetch('/wallets/deposit', {
     method: 'POST',
-    body: JSON.stringify({ amount }),
+    body: JSON.stringify(data),
   }, token);
 }
 
@@ -74,7 +74,8 @@ export async function withdrawFunds(
     account_bank: string;
     account_number: string;
     amount: number;
-    narration?: string;
+    transaction_fee: number;
+    narration?: string; 
     currency?: string;
     reference?: string;
     callback_url?: string;
@@ -233,9 +234,9 @@ export async function getTransactions(token: string, page: number = 1, limit: nu
     limit: limit.toString(),
     ...(type && type !== 'all' ? { type } : {}),
   });
-  return apiFetch(`/transactions?${params}`, { method: 'GET' }, token);
+  return apiFetch(`/wallets/transactions?${params}`, { method: 'GET' }, token);
 }
 
 export async function getTransactionById(id: string, token: string) {
-  return apiFetch(`/transactions/${id}`, { method: 'GET' }, token);
+  return apiFetch(`/wallets/transactions/${id}`, { method: 'GET' }, token);
 }
