@@ -224,3 +224,18 @@ export async function updateNotificationPreferences(data: any, token: string) {
     body: JSON.stringify(data),
   }, token);
 }
+
+// --- Transactions ---
+
+export async function getTransactions(token: string, page: number = 1, limit: number = 20, type?: 'deposit' | 'withdrawal' | 'all') {
+  const params = new URLSearchParams({
+    page: page.toString(),
+    limit: limit.toString(),
+    ...(type && type !== 'all' ? { type } : {}),
+  });
+  return apiFetch(`/transactions?${params}`, { method: 'GET' }, token);
+}
+
+export async function getTransactionById(id: string, token: string) {
+  return apiFetch(`/transactions/${id}`, { method: 'GET' }, token);
+}

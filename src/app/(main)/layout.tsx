@@ -24,6 +24,7 @@ const navItems = [
   { href: '/', label: 'Live Markets' },
   { href: '/portfolio', label: 'Portfolio' },
   { href: '/account', label: 'Wallet' },
+  { href: '/transactions', label: 'Transaction History' },
 ];
 
 // Utility hook to check login status from localStorage
@@ -176,6 +177,9 @@ function UserMenu() {
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
           <Link href="/settings">Settings</Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link href="/transactions">Transaction History</Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={()=>{
