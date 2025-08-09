@@ -92,29 +92,37 @@ export default function WalletPage() {
     }
   };
 
-    const fetchBanks = async () => {
-      try {
-        const banksList = await getBanks(token as string);
-        // Some APIs return {data: {data: [...]}} and some {data: [...]}, so handle both
-        const banksArray =
-          Array.isArray(banksList?.data?.data)
-            ? banksList.data.data
-            : Array.isArray(banksList?.data)
-              ? banksList.data
-              : Array.isArray(banksList)
-                ? banksList
-                : [];
-        setBanks(banksArray);
-      } catch (err: any) {
-        setBanks([]);
-        console.log(err)
-        // toast({
-        //   title: 'Error',
-        //   description: err.message || 'Failed to fetch banks list.',
-        //   variant: 'destructive',
-        // });
+      const fetchBanks = async () => {
+    if (!token) {
+      setBanks([]);
+      return;
+    }
+    
+    try {
+      const banksList = await getBanks(token);
+      // Some APIs return {data: {data: [...]}} and some {data: [...]}, so handle both
+      const banksArray =
+        Array.isArray(banksList?.data?.data)
+          ? banksList.data.data
+          : Array.isArray(banksList?.data)
+            ? banksList.data
+            : Array.isArray(banksList)
+              ? banksList
+              : [];
+      setBanks(banksArray);
+    } catch (err: any) {
+      setBanks([]);
+      console.error('Failed to fetch banks:', err);
+      // Only show error if it's not a network/auth issue
+      if (err.message && !err.message.includes('401') && !err.message.includes('fetch')) {
+        toast({
+          title: 'Warning',
+          description: 'Could not load banks list. You can still proceed with withdrawal.',
+          variant: 'default',
+        });
       }
-    };
+    }
+  };
 
 
   useEffect(() => {
@@ -200,7 +208,20 @@ export default function WalletPage() {
 
   // Open modal to collect withdrawal details
   const handleWithdraw = () => {
-    if (Number(amount) > Number(balance)) {
+    const numericAmount = parseFloat(amount);
+    
+    // Validate amount first
+    if (isNaN(numericAmount) || numericAmount < 1000) {
+      toast({
+        title: 'Invalid Amount',
+        description: 'Minimum withdrawal amount is ₦1,000.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
+    // Check sufficient balance
+    if (balance !== null && numericAmount > Number(balance)) {
       toast({
         title: 'Insufficient Balance',
         description: 'You do not have enough funds in your wallet to withdraw this amount.',
@@ -208,6 +229,8 @@ export default function WalletPage() {
       });
       return;
     }
+    
+    // Reset modal state and open
     setWithdrawError(null);
     setShowWithdrawModal(true);
     setWithdrawAccountNumber('');
@@ -219,28 +242,34 @@ export default function WalletPage() {
   const validate = async () => {
     setAccountName(null);
     setWithdrawError(null);
+    
     if (
       withdrawAccountNumber.trim().length >= 10 &&
       withdrawBankCode &&
-      withdrawAccountNumber.trim().length <= 12 // allow for 10-12 digit accounts
+      withdrawAccountNumber.trim().length <= 12 && // allow for 10-12 digit accounts
+      token
     ) {
       setIsValidatingAccount(true);
       try {
         const result = await validateAccount({
           account_number: withdrawAccountNumber.trim(),
           account_bank: withdrawBankCode,
-        }, token as string);
-        if (result && result.account_name) {
-          setAccountName(result.account_name);
+        }, token);
+        
+        // Handle different response formats
+        const accountName = result?.account_name || result?.data?.account_name || result?.data?.data?.account_name;
+        
+        if (accountName) {
+          setAccountName(accountName);
           setWithdrawError(null);
         } else {
           setAccountName(null);
-          setWithdrawError('Account validation failed. Please check details.');
+          setWithdrawError('Account validation failed. Please check your account details.');
         }
       } catch (err: any) {
         setAccountName(null);
         setWithdrawError(
-          err.message || 'Failed to validate account. Please check details.'
+          err.message || 'Failed to validate account. Please check your account details and try again.'
         );
       } finally {
         setIsValidatingAccount(false);
@@ -314,10 +343,132 @@ export default function WalletPage() {
   };
 
   // Modal component for withdrawal details
-  const WithdrawModal = () => {
-    if (!showWithdrawModal) return null;
-    return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+  // const WithdrawModal = () => {
+  //   if (!showWithdrawModal) return null;
+  //   return (
+  //     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+  //       <div className="bg-white dark:bg-background rounded-lg shadow-lg p-6 w-full max-w-md relative">
+  //         <button
+  //           className="absolute top-2 right-2 text-muted-foreground hover:text-destructive"
+  //           onClick={() => {
+  //             setShowWithdrawModal(false);
+  //             setWithdrawError(null);
+  //             setWithdrawAccountNumber('');
+  //             setWithdrawBankCode('');
+  //             setAccountName(null);
+  //           }}
+  //           aria-label="Close"
+  //           type="button"
+  //         >
+  //           ×
+  //         </button>
+  //         <h2 className="text-lg font-semibold mb-4">Withdrawal Details</h2>
+  //         <form onSubmit={handleWithdrawSubmit} className="space-y-4">
+  //           <div>
+  //             <Label htmlFor="withdraw-bank-name">Bank</Label>
+  //               <select
+  //                id="withdraw-bank-name"
+  //                value={withdrawBankCode}
+  //                onChange={e => {
+  //                  setWithdrawBankCode(e.target.value);
+  //                  // Clear previous validation when bank changes
+  //                  if (accountName) {
+  //                    setAccountName(null);
+  //                  }
+  //                  if (withdrawError) {
+  //                    setWithdrawError(null);
+  //                  }
+  //                }}
+  //                disabled={isLoading || banks.length === 0}
+  //                className="w-full border rounded px-3 py-2 bg-background text-foreground"
+  //                required
+  //              >
+  //                <option value="">
+  //                  {banks.length === 0 ? 'Loading banks...' : 'Select Bank'}
+  //                </option>
+  //                {banks && banks.length > 0 && banks.map((bank) => (
+  //                  <option key={bank.code} value={bank.code}>
+  //                    {bank.name}
+  //                  </option>
+  //                ))}
+  //              </select>
+  //           </div>
+  //           <div>
+  //             <Label htmlFor="withdraw-account-number">Account Number</Label>
+  //             <input
+  //               id="withdraw-account-number"
+  //               type="number"
+  //               value={withdrawAccountNumber}
+  //               onChange={e => setWithdrawAccountNumber(e.target.value)}
+  //              onBlur={validate}
+  //               disabled={isLoading}
+  //               maxLength={12}
+  //               minLength={10}
+  //               className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
+  //               autoComplete="off"
+  //               placeholder="Enter your 10-digit account number"
+  //               required
+  //             />
+  //           </div>
+  //           {isValidatingAccount && (
+  //             <div className="text-xs text-muted-foreground flex items-center gap-2">
+  //               <svg className="animate-spin h-4 w-4 mr-1 text-muted-foreground" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+  //                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+  //                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+  //               </svg>
+  //               Validating account...
+  //             </div>
+  //           )}
+  //           {accountName && (
+  //             <div className="text-green-700 dark:text-green-400 text-sm bg-green-50 dark:bg-green-900/20 p-2 rounded border">
+  //               ✓ Account Name: <span className="font-semibold">{accountName}</span>
+  //             </div>
+  //           )}
+  //           {withdrawError && (
+  //             <div className="text-destructive text-sm bg-destructive/10 p-2 rounded border border-destructive/20">
+  //               ⚠ {withdrawError}
+  //             </div>
+  //           )}
+  //           <div className="flex justify-end gap-2">
+  //             <Button
+  //               type="button"
+  //               variant="outline"
+  //               onClick={() => {
+  //                 setShowWithdrawModal(false);
+  //                 setWithdrawError(null);
+  //                 setWithdrawAccountNumber('');
+  //                 setWithdrawBankCode('');
+  //                 setAccountName(null);
+  //               }}
+  //               disabled={isLoading}
+  //             >
+  //               Cancel
+  //             </Button>
+  //             <Button type="submit" disabled={isLoading || isValidatingAccount || !accountName}>
+  //               {isLoading ? (
+  //                 <span className="flex items-center justify-center">
+  //                   <svg className="animate-spin h-4 w-4 mr-2 text-muted-foreground" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+  //                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+  //                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+  //                   </svg>
+  //                   Processing...
+  //                 </span>
+  //               ) : (
+  //                 "Confirm Withdrawal"
+  //               )}
+  //             </Button>
+  //           </div>
+  //         </form>
+  //       </div>
+  //     </div>
+  //   );
+  // };
+
+  return (
+    <ProtectedRoute>
+      {showWithdrawModal && (
+        <>
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
         <div className="bg-white dark:bg-background rounded-lg shadow-lg p-6 w-full max-w-md relative">
           <button
             className="absolute top-2 right-2 text-muted-foreground hover:text-destructive"
@@ -337,38 +488,47 @@ export default function WalletPage() {
           <form onSubmit={handleWithdrawSubmit} className="space-y-4">
             <div>
               <Label htmlFor="withdraw-bank-name">Bank</Label>
-              <select
-                id="withdraw-bank-name"
-                value={withdrawBankCode}
-                onChange={e => setWithdrawBankCode(e.target.value)}
-                disabled={isLoading || banks.length === 0}
-                className="w-full border rounded px-3 py-2 bg-background"
-                required
-              >
-                <option value="">Select Bank</option>
-                {banks && banks.length > 0 && banks.map((bank) => (
-                  <option key={bank.code} value={bank.code}>
-                    {bank.name}
-                  </option>
-                ))}
-              </select>
+                <select
+                 id="withdraw-bank-name"
+                 value={withdrawBankCode}
+                 onChange={e => {
+                   setWithdrawBankCode(e.target.value);
+                   // Clear previous validation when bank changes
+                   if (accountName) {
+                     setAccountName(null);
+                   }
+                   if (withdrawError) {
+                     setWithdrawError(null);
+                   }
+                 }}
+                 disabled={isLoading || banks.length === 0}
+                 className="w-full border rounded px-3 py-2 bg-background text-foreground"
+                 required
+               >
+                 <option value="">
+                   {banks.length === 0 ? 'Loading banks...' : 'Select Bank'}
+                 </option>
+                 {banks && banks.length > 0 && banks.map((bank) => (
+                   <option key={bank.code} value={bank.code}>
+                     {bank.name}
+                   </option>
+                 ))}
+               </select>
             </div>
             <div>
               <Label htmlFor="withdraw-account-number">Account Number</Label>
-              <Input
+              <input
                 id="withdraw-account-number"
-                type="text"
+                type="number"
                 value={withdrawAccountNumber}
-                onChange={e => {
-                  // Only allow numbers
-                  const val = e.target.value.replace(/\D/g, '');
-                  setWithdrawAccountNumber(val);
-                }}
-                onBlur={validate}
+                onChange={e => setWithdrawAccountNumber(e.target.value)}
+               onBlur={validate}
                 disabled={isLoading}
                 maxLength={12}
                 minLength={10}
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
                 autoComplete="off"
+                placeholder="Enter your 10-digit account number"
                 required
               />
             </div>
@@ -382,12 +542,14 @@ export default function WalletPage() {
               </div>
             )}
             {accountName && (
-              <div className="text-green-700 text-sm">
-                Account Name: <span className="font-semibold">{accountName}</span>
+              <div className="text-green-700 dark:text-green-400 text-sm bg-green-50 dark:bg-green-900/20 p-2 rounded border">
+                ✓ Account Name: <span className="font-semibold">{accountName}</span>
               </div>
             )}
             {withdrawError && (
-              <div className="text-destructive text-sm">{withdrawError}</div>
+              <div className="text-destructive text-sm bg-destructive/10 p-2 rounded border border-destructive/20">
+                ⚠ {withdrawError}
+              </div>
             )}
             <div className="flex justify-end gap-2">
               <Button
@@ -421,12 +583,8 @@ export default function WalletPage() {
           </form>
         </div>
       </div>
-    );
-  };
-
-  return (
-    <ProtectedRoute>
-      <WithdrawModal />
+        </>
+      )}
       <div className="container mx-auto">
         <header className="mb-8">
           <h1 className="text-4xl font-bold tracking-tight">Wallet</h1>
