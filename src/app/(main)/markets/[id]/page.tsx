@@ -59,7 +59,7 @@ export default function MarketDetailPage({
 }: {
   params: { id: string };
 }) {
-  // ✅ All hooks are now at the top level
+  // All hooks at the top level
   const [market, setMarket] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -70,16 +70,14 @@ export default function MarketDetailPage({
   const router = useRouter();
 
   const side = searchParams.get('side') === 'no' ? 'no' : 'yes';
-
-  console.log(side)
   const defaultTab = side === 'no' ? 'no' : 'yes';
 
+  // Only fetch market, do not set loading for profile fetch
   async function fetchMarket() {
-    const newParams = await params;
     setLoading(true);
     setError(null);
     try {
-      const data = await getMarketById(newParams?.id);
+      const data = await getMarketById(params?.id);
       if (!data || !data.market) {
         setError('Market not found');
         setMarket(null);
@@ -96,6 +94,7 @@ export default function MarketDetailPage({
 
   useEffect(() => {
     fetchMarket();
+    // Profile info is not critical for market display, so don't block loading on it
     getProfileInfo();
     // eslint-disable-next-line
   }, []);
@@ -126,20 +125,18 @@ export default function MarketDetailPage({
     );
   }
 
+  // Do NOT set loading for profile info, so market loading is not affected
   const getProfileInfo = async () => {
-    setLoading(true);
     try {
       const token = localStorage.getItem('jwt_token');
       const profile = await getProfile(token as string);
       setReferralCode(profile?.timedropId);
     } catch (err) {
       console.log(err);
-    } finally {
-      setLoading(false);
     }
   };
 
-  // ✅ Conditional returns come after all hooks
+  // Only show loading spinner if market is loading
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[40vh]">
@@ -169,6 +166,56 @@ export default function MarketDetailPage({
         </span>
       </div>
     );
+  }
+
+  // If market is not found, show error
+  if (!loading && market === null) {
+    if (error) {
+      console.error('Market loading error:', error);
+    }
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[40vh]">
+        <svg
+          className="h-10 w-10 text-destructive mb-4"
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+          aria-hidden="true"
+        >
+          <circle
+            className="opacity-25"
+            cx="12"
+            cy="12"
+            r="10"
+            stroke="currentColor"
+            strokeWidth="4"
+          />
+          <path
+            className="opacity-75"
+            fill="currentColor"
+            d="M12 2a10 10 0 1 1 0 20 10 10 0 0 1 0-20zm1 5h-2v6h2V7zm0 8h-2v2h2v-2z"
+          />
+        </svg>
+        <span className="text-lg font-semibold text-destructive mb-2">
+          Market Not Found
+        </span>
+        <span className="text-muted-foreground mb-4">
+          The market you are looking for does not exist or is unavailable.
+        </span>
+        <button
+          type='button'
+          onClick={()=> router.back()}
+          className="inline-flex items-center px-4 py-2 bg-primary text-white rounded hover:bg-primary/90 transition"
+        >
+          Browse Markets
+        </button>
+      </div>
+    );
+  }
+
+  // If market is still loading or not available, do not render the rest of the page
+  if (!market) {
+    return null;
   }
 
   const isMarketClosed = isPast(new Date(market?.endDate));
@@ -237,50 +284,6 @@ export default function MarketDetailPage({
 
   const estimatedCost = tradeAmount;
   const maxProfit = tradeAmount;
-
-  if (!loading && !market) {
-    if (error) {
-      console.error('Market loading error:', error);
-    }
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[40vh]">
-        <svg
-          className="h-10 w-10 text-destructive mb-4"
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-          aria-hidden="true"
-        >
-          <circle
-            className="opacity-25"
-            cx="12"
-            cy="12"
-            r="10"
-            stroke="currentColor"
-            strokeWidth="4"
-          />
-          <path
-            className="opacity-75"
-            fill="currentColor"
-            d="M12 2a10 10 0 1 1 0 20 10 10 0 0 1 0-20zm1 5h-2v6h2V7zm0 8h-2v2h2v-2z"
-          />
-        </svg>
-        <span className="text-lg font-semibold text-destructive mb-2">
-          Market Not Found
-        </span>
-        <span className="text-muted-foreground mb-4">
-          The market you are looking for does not exist or is unavailable.
-        </span>
-        <button
-          type='button'
-          onClick={()=> router.back()}
-          className="inline-flex items-center px-4 py-2 bg-primary text-white rounded hover:bg-primary/90 transition"
-        >
-          Browse Markets
-        </button>
-      </div>
-    );
-  }
 
   return (
     <div className="container mx-auto px-2 sm:px-4">

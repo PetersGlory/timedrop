@@ -94,7 +94,7 @@ export default function WalletPage() {
     }
   };
 
-      const fetchBanks = async () => {
+  const fetchBanks = async () => {
     if (!token) {
       setBanks([]);
       return;
@@ -280,7 +280,9 @@ export default function WalletPage() {
       } catch (err: any) {
         setAccountName(null);
         setWithdrawError(
-          err.message || 'Failed to validate account. Please check your account details and try again.'
+          (err?.response?.data?.message && typeof err.response.data.message === 'string')
+            ? err.response.data.message
+            : err.message || 'Failed to validate account. Please check your account details and try again.'
         );
       } finally {
         setIsValidatingAccount(false);
@@ -341,10 +343,18 @@ export default function WalletPage() {
       setShowWithdrawModal(false);
       fetchBalance();
     } catch (err: any) {
-      setWithdrawError(err.message || 'Failed to process withdrawal.');
+      let errorMessage = 'Failed to process withdrawal.';
+      if (err?.response?.data?.message) {
+        errorMessage = err.response.data.message;
+      } else if (err?.response?.data?.error) {
+        errorMessage = err.response.data.error;
+      }else if (err?.message) {
+        errorMessage = err.message;
+      }
+      setWithdrawError(errorMessage);
       toast({
         title: 'Withdrawal Error',
-        description: err.message || 'Failed to process withdrawal.',
+        description: errorMessage,
         variant: 'destructive',
       });
     } finally {
