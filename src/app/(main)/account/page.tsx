@@ -7,6 +7,7 @@ import {
   Card,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
@@ -26,6 +27,7 @@ import {
   getBanks,
   validateAccount,
 } from './api';
+import Link from 'next/link';
 
 export default function WalletPage() {
   const { token } = useAuth();
@@ -500,6 +502,13 @@ export default function WalletPage() {
                 Your available trading balance.
               </p>
             </CardContent>
+            <CardFooter>
+              <Button>
+                <Link href="/transactions">
+                  View Transactions
+                </Link>
+              </Button>
+            </CardFooter>
           </Card>
         </div>
 

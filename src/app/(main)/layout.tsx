@@ -24,23 +24,49 @@ const navItems = [
   { href: '/', label: 'Live Markets' },
   { href: '/portfolio', label: 'Portfolio' },
   { href: '/account', label: 'Wallet' },
-  { href: '/transactions', label: 'Transaction History' },
+  // { href: '/transactions', label: 'Transaction History' },
 ];
 
 // Utility hook to check login status from localStorage
 function useIsLoggedIn() {
   const [isLoggedIn, setIsLoggedIn] = React.useState<boolean>(false);
-  const {setTheme} = useTheme();
+  const { setTheme } = useTheme();
 
   React.useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const jwt = localStorage.getItem('jwt_token');
-      const token = localStorage.getItem('token');
-      const adminToken = localStorage.getItem('admin_token');
-      setIsLoggedIn(Boolean(jwt || token || adminToken));
+    function checkLogin() {
+      if (typeof window !== 'undefined') {
+        const jwt = localStorage.getItem('jwt_token');
+        const token = localStorage.getItem('token');
+        const adminToken = localStorage.getItem('admin_token');
+        setIsLoggedIn(Boolean(jwt || token || adminToken));
+      }
     }
-    setTheme('light')
-  }, []);
+    checkLogin();
+    setTheme('light');
+
+    // Listen for custom logout/login events to update state
+    function handleAuthChange() {
+      checkLogin();
+    }
+    window.addEventListener('auth-changed', handleAuthChange);
+
+    // Also listen for storage changes (e.g., in other tabs)
+    function handleStorageChange(e: StorageEvent) {
+      if (
+        e.key === 'jwt_token' ||
+        e.key === 'token' ||
+        e.key === 'admin_token'
+      ) {
+        checkLogin();
+      }
+    }
+    window.addEventListener('storage', handleStorageChange);
+
+    return () => {
+      window.removeEventListener('auth-changed', handleAuthChange);
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, [setTheme]);
 
   return isLoggedIn;
 }
@@ -129,9 +155,9 @@ export default function MainLayout({
               <Link href="/login">
                 <Button variant="outline">Login</Button>
               </Link>
-              <Link href="/register">
+              {/* <Link href="/register">
                 <Button variant="default">Get Started</Button>
-              </Link>
+              </Link> */}
             </div>
           )}
         </div>
@@ -161,6 +187,15 @@ export default function MainLayout({
 
 function UserMenu() {
   const router = useRouter();
+
+  // Fire a custom event to notify auth state change
+  const handleLogout = React.useCallback(() => {
+    localStorage.clear();
+    // Notify all listeners (including other tabs and this tab)
+    window.dispatchEvent(new Event('auth-changed'));
+    router.replace("/");
+  }, [router]);
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -182,10 +217,7 @@ function UserMenu() {
           <Link href="/transactions">Transaction History</Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={()=>{
-          localStorage.clear();
-          router.replace("/");
-        }}>Logout</DropdownMenuItem>
+        <DropdownMenuItem onClick={handleLogout}>Logout</DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );
