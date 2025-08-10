@@ -151,6 +151,18 @@ function OrderTable({
   loading?: boolean;
   error?: string | null;
 }) {
+  // Helper to format date
+  function formatDate(dateString: string) {
+    const date = new Date(dateString);
+    return date.toLocaleDateString(undefined, {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  }
+
   if (loading) {
     return (
       <div className="text-center py-12 text-muted-foreground">
@@ -183,6 +195,7 @@ function OrderTable({
           <TableHead>Type</TableHead>
           <TableHead className="text-right">Amount</TableHead>
           <TableHead>Status</TableHead>
+          <TableHead>Date</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -204,6 +217,11 @@ function OrderTable({
             </TableCell>
             <TableCell>
               <Badge variant="secondary">{order.status}</Badge>
+            </TableCell>
+            <TableCell>
+              <span className="text-sm">
+                {order.createdAt ? formatDate(order.createdAt) : "—"}
+              </span>
             </TableCell>
           </TableRow>
         ))}

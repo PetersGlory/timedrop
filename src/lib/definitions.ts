@@ -24,4 +24,5 @@ export type Order = {
   price: number;
   quantity: number;
   status: 'Open' | 'Filled' | 'Cancelled' | 'Closed'| 'pending';
+  createdAt: string;
 };
