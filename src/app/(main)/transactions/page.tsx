@@ -419,7 +419,7 @@ export default function TransactionsPage() {
                       </TableCell>
                       <TableCell>
                         <code className="text-sm bg-muted px-2 py-1 rounded">
-                          {transaction.reference || 'N/A'}
+                          {transaction.reference?.slice(0, 15) + '...' || 'N/A'}
                         </code>
                       </TableCell>
                       <TableCell>
