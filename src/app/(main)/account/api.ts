@@ -240,3 +240,19 @@ export async function getTransactions(token: string, page: number = 1, limit: nu
 export async function getTransactionById(id: string, token: string) {
   return apiFetch(`/wallets/transactions/${id}`, { method: 'GET' }, token);
 }
+
+// --- Password Reset ---
+
+export async function forgotPassword(userEmail: string) {
+  return apiFetch('/auth/forgot-password', {
+    method: 'POST',
+    body: JSON.stringify({ userEmail }),
+  });
+}
+
+export async function resetPassword(token: string, newPassword: string) {
+  return apiFetch('/auth/reset-password', {
+    method: 'POST',
+    body: JSON.stringify({ token, newPassword }),
+  });
+}

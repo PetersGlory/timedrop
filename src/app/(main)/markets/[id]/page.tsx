@@ -25,7 +25,7 @@ import { getMarketById, getProfile, placeOrder } from '../../account/api';
 import { useAuth } from '@/context/AuthContext';
 import { generateMarketHistory } from '@/lib/data';
 
-const TRADE_AMOUNTS = [5000, 10000, 20000, 50000, 100000, 200000];
+const TRADE_AMOUNTS = [5000, 10000, 50000, 100000];
 
 function ShareButtonFull(referralCode: any) {
   const referralLink =
