@@ -19,7 +19,6 @@ import { resetPassword } from '../account/api';
 export default function ResetPasswordPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const token = searchParams.get('token');
 
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -34,6 +33,7 @@ export default function ResetPasswordPage() {
 
   // Check if token exists
   useEffect(() => {
+    const token = searchParams.get('token');
     if (!token) {
       toast({
         title: 'Invalid Reset Link',
@@ -42,7 +42,8 @@ export default function ResetPasswordPage() {
       });
       router.push('/login');
     }
-  }, [token, router]);
+    localStorage.setItem("reset-tokens", token as string);
+  }, [router]);
 
   // Password validation
   const validatePassword = (password: string) => {
@@ -112,6 +113,8 @@ export default function ResetPasswordPage() {
   // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    const token = localStorage.getItem("reset-tokens");
     
     if (!token) {
       toast({
@@ -172,16 +175,16 @@ export default function ResetPasswordPage() {
   };
 
   // If no token, show loading
-  if (!token) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-2 text-muted-foreground">Redirecting...</p>
-        </div>
-      </div>
-    );
-  }
+  // if (!token) {
+  //   return (
+  //     <div className="min-h-screen flex items-center justify-center">
+  //       <div className="text-center">
+  //         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+  //         <p className="mt-2 text-muted-foreground">Redirecting...</p>
+  //       </div>
+  //     </div>
+  //   );
+  // }
 
   // Success state
   if (success) {
