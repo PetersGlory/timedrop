@@ -170,12 +170,12 @@ export default function LoginPage() {
             <a href="/register" className="text-primary underline">
               Create account
             </a>
-            <button
+            {/* <button
               onClick={() => setShowForgotPassword(true)}
               className="text-muted-foreground hover:text-primary hover:underline transition-colors"
             >
               Forgot password?
-            </button>
+            </button> */}
           </div>
         </div>
       </div>
