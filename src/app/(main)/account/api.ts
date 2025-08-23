@@ -28,7 +28,7 @@ async function apiFetch(endpoint: string, options: RequestInit = {}, token?: str
       return; // stop execution
     }
 
-    throw new Error(error.message || 'API Error');
+    throw new Error(error.message || error.response.data.message || error.response.data.error || 'API Error');
   }
 
   return res.json();
