@@ -8,6 +8,7 @@ async function apiFetch(endpoint: string, options: RequestInit = {}, token?: str
     'Content-Type': 'application/json',
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
   };
+
   const res = await fetch(`${BASE_URL}${endpoint}`, {
     ...options,
     headers: {
@@ -15,12 +16,24 @@ async function apiFetch(endpoint: string, options: RequestInit = {}, token?: str
       ...(options.headers || {}),
     },
   });
+
+  // Handle error responses
   if (!res.ok) {
     const error = await res.json().catch(() => ({}));
+
+    // 🔑 Check for 401 Unauthorized
+    if (res.status === 401) {
+      localStorage.clear(); // clear user data
+      window.location.href = '/login'; // force redirect
+      return; // stop execution
+    }
+
     throw new Error(error.message || 'API Error');
   }
+
   return res.json();
 }
+
 
 // Authentication endpoints
 export async function loginUser(email: string, password: string) {
