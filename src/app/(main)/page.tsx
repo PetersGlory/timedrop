@@ -149,11 +149,11 @@ export default function MarketsPage() {
       >
         {dailyMarkets.length > 0 && (
           <div className="mb-12 mt-4">
-            <h2 className="text-3xl font-bold tracking-tight mb-8">
+            <h2 className="text-xl font-bold tracking-tight mb-8">
               Daily Markets
             </h2>
             <div className="overflow-x-auto">
-              <div className="flex gap-6 opacity-75 pb-2" style={{ minWidth: 0 }}>
+              <div className="flex gap-6 pb-2" style={{ minWidth: 0 }}>
                 {dailyMarkets.map((market) => (
                   <div
                     key={market.id}
@@ -186,7 +186,7 @@ export default function MarketsPage() {
       {closedMarkets.length > 0 && searchTerm === '' && !loading && !error && (
         <div className="mt-12">
           <Separator className="my-8" />
-          <h2 className="text-3xl font-bold tracking-tight mb-8">
+          <h2 className="text-xl font-bold tracking-tight mb-8">
             Closed Markets
           </h2>
           <div className="grid grid-cols-1 gap-6 opacity-75 md:grid-cols-2 lg:grid-cols-3">
