@@ -61,6 +61,9 @@ export default function MarketsPage() {
   const activeMarkets = markets.filter(
     (market) => !isPast(new Date(market.endDate)) && market?.status == "Open"
   );
+  const dailyMarkets = markets.filter(
+    (market) => market?.isDaily == true
+  );
   const closedMarkets = markets.filter((market) =>
     isPast(new Date(market.endDate))
   );
@@ -144,15 +147,26 @@ export default function MarketsPage() {
         className="w-full"
         onValueChange={setActiveTab}
       >
-        {/* <div className="overflow-x-auto pb-2">
-          <TabsList>
-            {availableCategories.map((category) => (
-              <TabsTrigger key={category} value={category}>
-                {category}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-        </div> */}
+        {dailyMarkets.length > 0 && (
+          <div className="mb-12 mt-4">
+            <h2 className="text-3xl font-bold tracking-tight mb-8">
+              Daily Markets
+            </h2>
+            <div className="overflow-x-auto">
+              <div className="flex gap-6 opacity-75 pb-2" style={{ minWidth: 0 }}>
+                {dailyMarkets.map((market) => (
+                  <div
+                    key={market.id}
+                    className="min-w-[280px] max-w-xs flex-shrink-0 w-full md:min-w-[320px] md:max-w-sm"
+                  >
+                    <MarketCard market={market} />
+                  </div>
+                ))}
+              </div>
+            </div>
+            <Separator className="my-8" />
+          </div>
+        )}
 
         <TabsContent value={activeTab} className="mt-6">
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">

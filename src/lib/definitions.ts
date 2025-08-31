@@ -14,6 +14,7 @@ export type Market = {
   startDate: string;
   endDate: string;
   status: 'Open' | 'closed' | 'archieve';
+  isDaily: boolean;
 };
 
 export type Order = {
