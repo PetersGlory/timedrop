@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -6,7 +5,7 @@ import { getMarkets } from './account/api';
 import { MarketCard } from '@/components/market-card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import type { Market } from '@/lib/definitions';
-import { isPast } from 'date-fns';
+import { isPast, isAfter } from 'date-fns';
 import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -35,6 +34,23 @@ const orderedCategories = [
   'Misc',
 ];
 
+// Helper function to check if market is closed based on endDate and time
+const isMarketClosed = (endDate: string): boolean => {
+  const now = new Date();
+  const marketEndDate = new Date(endDate);
+  
+  // Use isPast for more precise comparison that includes time
+  return isPast(marketEndDate);
+  
+  // Alternative approach - more explicit comparison:
+  // return now >= marketEndDate;
+};
+
+// Helper function to check if market is still active
+const isMarketActive = (market: Market): boolean => {
+  return !isMarketClosed(market.endDate) && market?.status === "Open";
+};
+
 export default function MarketsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('All');
@@ -58,14 +74,15 @@ export default function MarketsPage() {
     fetchMarkets();
   }, []);
 
-  const activeMarkets = markets.filter(
-    (market) => !isPast(new Date(market.endDate)) && market?.status == "Open"
-  );
+  // Filter markets using the improved helper function
+  const activeMarkets = markets.filter(isMarketActive);
+  
   const dailyMarkets = markets.filter(
-    (market) => market?.isDaily == true  && market?.status == "Open"
+    (market) => market?.isDaily === true && market?.status === "Open" && !isMarketClosed(market.endDate)
   );
-  const closedMarkets = markets.filter((market) =>
-    isPast(new Date(market.endDate))
+  
+  const closedMarkets = markets.filter((market) => 
+    isMarketClosed(market.endDate) || market?.status !== "Open"
   );
 
   const filteredActiveMarkets = activeMarkets.filter((market) =>
@@ -82,6 +99,25 @@ export default function MarketsPage() {
   };
   
   const marketsForCurrentTab = getMarketsByCategory(activeTab);
+
+  // Debug logging (remove in production)
+  useEffect(() => {
+    if (markets.length > 0) {
+      console.log('Sample market endDate check:');
+      markets.slice(0, 2).forEach(market => {
+        const endDate = new Date(market.endDate);
+        const now = new Date();
+        console.log({
+          question: market.question,
+          endDate: market.endDate,
+          parsedEndDate: endDate,
+          currentTime: now,
+          isPastResult: isPast(endDate),
+          isMarketClosedResult: isMarketClosed(market.endDate)
+        });
+      });
+    }
+  }, [markets]);
 
   return (
     <div className="container mx-auto">
