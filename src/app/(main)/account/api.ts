@@ -56,6 +56,18 @@ export async function registerUser(data: {
   });
 }
 
+// Google Authentication
+export async function loginWithGoogle(data: {
+  firstName: string;
+  lastName: string;
+  email: string;
+}) {
+  return apiFetch('/auth/google', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+
 export async function logoutUser(token: string) {
   return apiFetch('/auth/logout', {
     method: 'POST',

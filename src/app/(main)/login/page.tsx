@@ -1,7 +1,7 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { loginUser, forgotPassword } from "../account/api";
+import { loginUser, forgotPassword, loginWithGoogle } from "../account/api";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,8 +19,106 @@ export default function LoginPage() {
   const [forgotPasswordEmail, setForgotPasswordEmail] = useState("");
   const [forgotPasswordLoading, setForgotPasswordLoading] = useState(false);
   const [forgotPasswordSuccess, setForgotPasswordSuccess] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const router = useRouter();
   const auth = useAuth();
+  const googleDivRef = useRef<HTMLDivElement | null>(null);
+
+  // Decode Google credential JWT without external deps
+  function parseJwt(token: string): any {
+    try {
+      const base64Url = token.split(".")[1];
+      const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+      const jsonPayload = decodeURIComponent(
+        atob(base64)
+          .split("")
+          .map(c => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+          .join("")
+      );
+      return JSON.parse(jsonPayload);
+    } catch {
+      return null;
+    }
+  }
+
+  // Initialize Google Identity Services
+  useEffect(() => {
+    const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+    if (!clientId) return; // silently skip if not configured
+
+    const initialize = () => {
+      // @ts-ignore - google is injected globally
+      if (!window.google || !window.google.accounts || !googleDivRef.current) return;
+      // @ts-ignore
+      window.google.accounts.id.initialize({
+        client_id: clientId,
+        callback: async (response: any) => {
+          const payload = parseJwt(response.credential);
+          if (!payload) {
+            toast({ title: "Google sign-in failed", variant: "destructive" });
+            return;
+          }
+          const email = payload.email as string | undefined;
+          const fullName = (payload.name as string | undefined) || "";
+          const givenName = (payload.given_name as string | undefined) || fullName.split(" ")[0] || "";
+          const familyName = (payload.family_name as string | undefined) || fullName.split(" ").slice(1).join(" ") || "";
+
+          if (!email) {
+            toast({ title: "No email returned from Google", variant: "destructive" });
+            return;
+          }
+
+          try {
+            setGoogleLoading(true);
+            const res = await loginWithGoogle({
+              firstName: givenName,
+              lastName: familyName,
+              email,
+            });
+            if (res && res.token) {
+              auth.login(res.token);
+              router.push("/");
+            } else {
+              toast({ title: "Google login failed", description: res?.message || "Unknown error", variant: "destructive" });
+            }
+          } catch (err: any) {
+            toast({ title: "Google login failed", description: err?.message || "Request error", variant: "destructive" });
+          } finally {
+            setGoogleLoading(false);
+          }
+        },
+        auto_select: false,
+        ux_mode: "popup",
+      });
+      // @ts-ignore
+      window.google.accounts.id.renderButton(googleDivRef.current, {
+        theme: "outline",
+        size: "large",
+        width: 360,
+        type: "standard",
+        text: "continue_with",
+        shape: "rectangular",
+      });
+    };
+
+    // Load the script if not already present
+    const existing = document.querySelector('script[src="https://accounts.google.com/gsi/client"]') as HTMLScriptElement | null;
+    if (existing) {
+      existing.addEventListener("load", initialize);
+      initialize();
+      return () => existing.removeEventListener("load", initialize);
+    }
+
+    const script = document.createElement("script");
+    script.src = "https://accounts.google.com/gsi/client";
+    script.async = true;
+    script.defer = true;
+    script.onload = initialize;
+    document.body.appendChild(script);
+    return () => {
+      script.onload = null;
+    };
+  }, [auth, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -105,7 +203,7 @@ export default function LoginPage() {
             <h1 className="text-3xl font-bold">Welcome Back</h1>
             <p className="text-muted-foreground mt-1">Sign in to your Timedrop account</p>
           </div>
-          <form onSubmit={handleSubmit} className="space-y-4">
+          {/* <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label htmlFor="email" className="block text-sm font-medium mb-1">
                 Email
@@ -165,18 +263,33 @@ export default function LoginPage() {
                 "Login"
               )}
             </Button>
-          </form>
-          <div className="flex justify-between mt-4 text-sm">
+          </form> */}
+          <div className="mt-4">
+            {/* <div className="flex items-center gap-2 my-4">
+              <div className="h-px bg-border w-full" />
+              <span className="text-xs text-muted-foreground">or</span>
+              <div className="h-px bg-border w-full" />
+            </div> */}
+            <div className="flex flex-col gap-3">
+              <div ref={googleDivRef} className="flex justify-center" />
+              {!process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID && (
+                <Button variant="outline" className="w-full" disabled>
+                  Configure NEXT_PUBLIC_GOOGLE_CLIENT_ID to enable Google Sign-In
+                </Button>
+              )}
+            </div>
+          </div>
+          {/* <div className="flex justify-between mt-4 text-sm">
             <a href="/register" className="text-primary underline">
               Create account
             </a>
-            {/* <button
+            <button
               onClick={() => setShowForgotPassword(true)}
               className="text-muted-foreground hover:text-primary hover:underline transition-colors"
             >
               Forgot password?
-            </button> */}
-          </div>
+            </button>
+          </div> */}
         </div>
       </div>
 
