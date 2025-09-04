@@ -139,12 +139,12 @@ export default function MarketsPage() {
             <DialogTrigger asChild>
               <Button variant="outline">
                 <Info className="mr-2 h-4 w-4" />
-                How it works
+                Guide
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[425px]">
               <DialogHeader>
-                <DialogTitle>How it works</DialogTitle>
+                <DialogTitle>Guide</DialogTitle>
                 <DialogDescription>
                   A simple guide to get you started.
                 </DialogDescription>
