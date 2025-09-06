@@ -19,7 +19,7 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
       }
     }
     if (!foundToken) {
-      router.push('/register');
+      router.push('/login');
     }
   }, [router]);
 

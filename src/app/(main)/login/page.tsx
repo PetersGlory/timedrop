@@ -76,7 +76,8 @@ export default function LoginPage() {
               email,
             });
             if (res && res.token) {
-              auth.login(res.token);
+              auth.login(res.token);              
+              window.dispatchEvent(new Event('auth-changed'));
               router.push("/");
             } else {
               toast({ title: "Google login failed", description: res?.message || "Unknown error", variant: "destructive" });

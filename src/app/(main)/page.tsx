@@ -78,7 +78,7 @@ export default function MarketsPage() {
   const activeMarkets = markets.filter(isMarketActive);
   
   const dailyMarkets = markets.filter(
-    (market) => market?.isDaily === true && market?.status === "Open" && !isMarketClosed(market.endDate)
+    (market) => market?.isDaily === true && market?.status === "Open" && !isMarketClosed(market.endDate) || market?.isDaily === 1 && market?.status === "Open" && !isMarketClosed(market.endDate)
   );
   
   const closedMarkets = markets.filter((market) => 

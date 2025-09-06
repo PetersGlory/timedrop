@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import React,{ useState, useEffect, useCallback } from 'react';
 import { notFound, useRouter, useSearchParams } from 'next/navigation';
 import {
   Card,
@@ -27,19 +27,43 @@ import { generateMarketHistory } from '@/lib/data';
 
 const TRADE_AMOUNTS = [5000, 10000, 50000, 100000];
 
+
 function ShareButtonFull(referralCode: any) {
   const referralLink =
     typeof window !== 'undefined'
       ? `${window.location.origin}/register?ref=${referralCode}`
       : `/register?ref=${referralCode}`;
 
-  const handleShare = () => {
-    navigator.clipboard.writeText(referralLink);
-    toast({
-      title: 'Link Copied!',
-      description: 'The market link has been copied to your clipboard.',
-    });
+  const handleShare = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'Join this market!',
+          text: 'Check out this market and join using my referral link:',
+          url: referralLink,
+        });
+        toast({
+          title: 'Link Shared!',
+          description: 'The market link has been shared using your device options.',
+        });
+      } catch (error) {
+        // If user cancels or share fails, fallback to clipboard
+        navigator.clipboard.writeText(referralLink);
+        toast({
+          title: 'Link Copied!',
+          description: 'The market link has been copied to your clipboard.',
+        });
+      }
+    } else {
+      // Fallback for browsers that do not support Web Share API
+      navigator.clipboard.writeText(referralLink);
+      toast({
+        title: 'Link Copied!',
+        description: 'The market link has been copied to your clipboard.',
+      });
+    }
   };
+
   return (
     <Button
       variant="outline"
@@ -99,19 +123,43 @@ export default function MarketDetailPage({
     // eslint-disable-next-line
   }, []);
 
+
   function ShareButton() {
     const referralLink =
       typeof window !== 'undefined'
         ? `${window.location.origin}/register?ref=${referralCode}`
         : `/register?ref=${referralCode}`;
 
-    const handleShare = () => {
-      navigator.clipboard.writeText(referralLink);
-      toast({
-        title: 'Link Copied!',
-        description: 'The market link has been copied to your clipboard.',
-      });
-    };
+    const handleShare = useCallback(async () => {
+      if (typeof window !== "undefined" && navigator.share) {
+        try {
+          await navigator.share({
+            title: "Join me on Timedrop!",
+            text: "Check out this market and sign up with my referral link.",
+            url: referralLink,
+          });
+          toast({
+            title: "Shared!",
+            description: "Your referral link was shared successfully.",
+          });
+        } catch (err) {
+          // If user cancels or error, fallback to clipboard
+          navigator.clipboard.writeText(referralLink);
+          toast({
+            title: "Link Copied!",
+            description: "The referral link has been copied to your clipboard.",
+          });
+        }
+      } else {
+        // Fallback for browsers that don't support Web Share API
+        navigator.clipboard.writeText(referralLink);
+        toast({
+          title: "Link Copied!",
+          description: "The referral link has been copied to your clipboard.",
+        });
+      }
+    }, [referralLink]);
+
     return (
       <Button
         variant="outline"
@@ -413,7 +461,7 @@ export default function MarketDetailPage({
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className='hidden md:flex flex-col'>
             <CardHeader>
               <CardTitle>How It Works</CardTitle>
             </CardHeader>
@@ -493,6 +541,30 @@ export default function MarketDetailPage({
             </CardContent>
           </Card>
         </div>
+        <Card className='flex flex-col md:hidden'>
+          <CardHeader>
+            <CardTitle>How It Works</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4 text-muted-foreground">
+            <p>
+              This is a market where you can predict the outcome of a future event. Your response reflects your current belief.
+            </p>
+            <p>
+              You are going against other traders for very specific singular outcomes.
+            </p>
+            <ul className="list-disc pl-5 space-y-2">
+              <li>
+                Select an amount you want to trade.
+              </li>
+              <li>
+                When an opposing order from another trader matches, a trade occurs.
+              </li>
+              <li>
+                If you are correct, you get your trade back plus your profit.
+              </li>
+            </ul>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

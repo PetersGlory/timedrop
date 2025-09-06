@@ -108,25 +108,32 @@ export function MarketCard({ market }: { market: Market }) {
             </AreaChart>
           </ChartContainer>
         </div>
-         <div className="flex justify-between w-full items-center">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="text-muted-foreground"
-            onClick={handleBookmark}
-          >
-            <Bookmark className={cn('h-5 w-5', isBookmarked && 'fill-primary text-primary')} />
-            <span className="sr-only">Bookmark</span>
-          </Button>
-          <div className="flex gap-2">
-            <Button asChild size="sm">
-                <Link href={`/markets/${market.id}?side=yes`}>BUY YES</Link>
+        {market.status !== "closed" ? (
+          <div className="flex justify-between w-full items-center">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-muted-foreground"
+              onClick={handleBookmark}
+            >
+              <Bookmark className={cn('h-5 w-5', isBookmarked && 'fill-primary text-primary')} />
+              <span className="sr-only">Bookmark</span>
             </Button>
-            <Button asChild variant="secondary" size="sm">
-                <Link href={`/markets/${market.id}?side=no`}>BUY NO</Link>
-            </Button>
+            <div className="flex gap-2">
+              <Button asChild size="sm">
+                  <Link href={`/markets/${market.id}?side=yes`}>BUY YES</Link>
+              </Button>
+              <Button asChild variant="secondary" size="sm">
+                  <Link href={`/markets/${market.id}?side=no`}>BUY NO</Link>
+              </Button>
+            </div>
           </div>
-        </div>
+        ): (
+          <div className="flex flex-row items-center w-full justify-between px-4 py-2">
+            <p className='font-bold text-gray-700'>Outcome:</p>
+            <p className='font-bold text-primary'>{market.outcome}</p>
+          </div>
+        )}
       </CardFooter>
     </Card>
   );
