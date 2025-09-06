@@ -325,6 +325,11 @@ export default function MarketDetailPage({
         title: 'Order Failed',
         description: err.message || 'Failed to place order. Please try again.',
       });
+      if(err.message == "Insufficient wallet balance"){
+        setTimeout(()=>{
+          router.replace("/account")
+        },1000)
+      }
     } finally {
       setLoading(false);
     }
