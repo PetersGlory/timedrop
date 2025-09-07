@@ -588,9 +588,9 @@ export default function WalletPage() {
                   )}
                 </Button>
               </div>
-              <div className="text-xs text-muted-foreground pt-2">
+              {/* <div className="text-xs text-muted-foreground pt-2">
                 Payments are securely processed by Flutterwave.
-              </div>
+              </div> */}
             </CardContent>
           </Card>
         </div>

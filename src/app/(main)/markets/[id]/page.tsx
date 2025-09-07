@@ -31,8 +31,8 @@ const TRADE_AMOUNTS = [5000, 10000, 50000, 100000];
 function ShareButtonFull(referralCode: any) {
   const referralLink =
     typeof window !== 'undefined'
-      ? `${window.location.origin}/register?ref=${referralCode}`
-      : `/register?ref=${referralCode}`;
+      ? `${window.location.origin}/login?ref=${referralCode}`
+      : `/login?ref=${referralCode}`;
 
   const handleShare = async () => {
     if (navigator.share) {
@@ -127,8 +127,8 @@ export default function MarketDetailPage({
   function ShareButton() {
     const referralLink =
       typeof window !== 'undefined'
-        ? `${window.location.origin}/register?ref=${referralCode}`
-        : `/register?ref=${referralCode}`;
+        ? `${window.location.origin}/login?ref=${referralCode}`
+        : `/login?ref=${referralCode}`;
 
     const handleShare = useCallback(async () => {
       if (typeof window !== "undefined" && navigator.share) {
