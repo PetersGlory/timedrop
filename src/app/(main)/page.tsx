@@ -48,7 +48,7 @@ const isMarketClosed = (endDate: string): boolean => {
 
 // Helper function to check if market is still active
 const isMarketActive = (market: Market): boolean => {
-  return !isMarketClosed(market.endDate) && market?.status === "Open";
+  return !isMarketClosed(market.endDate) && market?.status === "Open" && market?.isDaily === 0;
 };
 
 export default function MarketsPage() {

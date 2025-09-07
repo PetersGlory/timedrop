@@ -78,7 +78,9 @@ export function MarketCard({ market }: { market: Market }) {
             </CardTitle>
           </div>
         </div>
-        <CountdownTimer endDate={market.endDate} />
+        {market.status !== "closed" && (
+          <CountdownTimer endDate={market.endDate} />
+        )}
       </CardContent>
       <CardFooter className="flex flex-col items-start gap-4 p-4 pt-0">
         <div className="w-full h-20 -mb-4">
