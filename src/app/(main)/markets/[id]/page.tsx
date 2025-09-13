@@ -592,39 +592,49 @@ function TradeForm({
   onOrderPlacement: () => void;
   referralCode: string;
 }) {
+  const calculateContracts = (anyVal:any) =>{
+    return anyVal / 1000;
+  }
   return (
     <div className="pt-4 space-y-4">
       <div className="space-y-2">
         <Label>Trade Contract</Label>
         <div className="flex flex-wrap gap-2">
-          {TRADE_AMOUNTS.map((amount) => (
-            <Button
-              key={`trade-${amount}`}
-              variant={tradeAmount === amount ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setTradeAmount(amount)}
-              className="flex-grow min-w-[40%] sm:min-w-[120px] max-w-[48%] sm:max-w-[160px] text-xs sm:text-sm"
-            >
-              {amount.toLocaleString()}
-            </Button>
-          ))}
+          {TRADE_AMOUNTS.map((amount) => {
+            // Calculate number of contracts (assuming 1 contract = 1000)
+            const contracts = amount / 1000;
+            return (
+              <Button
+                key={`trade-${amount}`}
+                variant={tradeAmount === amount ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setTradeAmount(amount)}
+                className="flex-grow min-w-[40%] sm:min-w-[120px] max-w-[48%] pt-1 sm:max-w-[160px] text-xs sm:text-sm flex flex-col items-center"
+              >
+                <span>{amount.toLocaleString()}</span>
+                <span className="text-[10px] text-gray-400 hover:text-gray-200 mt-[-10%]">
+                  - {contracts} contract{contracts > 1 ? 's' : ''}
+                </span>
+              </Button>
+            );
+          })}
         </div>
       </div>
       <div className="border-t pt-4 space-y-2">
         <div className="flex justify-between text-sm">
           <span className="text-muted-foreground">Your Contract:</span>
-          <span className="font-medium">{estimatedCost.toFixed(2)}</span>
+          <span className="font-medium">{estimatedCost.toFixed(2) +"/"+calculateContracts(estimatedCost) +"C"}</span>
         </div>
         <div className="flex justify-between text-sm">
           <span className="text-muted-foreground">Profit:</span>
           <span className="font-medium text-green-600">
-            {maxProfit.toFixed(2)}
+            {maxProfit.toFixed(2) + "/" + calculateContracts(maxProfit) + "C"}
           </span>
         </div>
         <div className="flex justify-between text-sm font-semibold">
           <span className="text-foreground">Minimum Payout:</span>
           <span className="text-foreground">
-            {(estimatedCost + maxProfit).toFixed(2)}
+            {(estimatedCost + maxProfit).toFixed(2) + "/" + calculateContracts((estimatedCost + maxProfit)) + "C"}
           </span>
         </div>
       </div>
