@@ -344,10 +344,10 @@ export default function WalletPage() {
       fetchBalance();
     } catch (err: any) {
       let errorMessage = 'Failed to process withdrawal.';
-      if (err?.response?.data?.message) {
-        errorMessage = err.response.data.message;
-      } else if (err?.response?.data?.error) {
-        errorMessage = err.response.data.error;
+      if (err?.message) {
+        errorMessage = err.message;
+      } else if (err?.error) {
+        errorMessage = err.error;
       }else if (err?.message) {
         errorMessage = err.message;
       }
