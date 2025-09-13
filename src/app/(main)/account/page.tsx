@@ -181,7 +181,7 @@ export default function WalletPage() {
               narration: 'Wallet deposit via Flutterwave',
               currency: 'NGN',
               reference: response.transaction_id,
-              payment_method: response.meta.payment_method,
+              payment_method: "flutterwave_deposits",
               tx_ref: response.tx_ref,
               status: response.status,
             }
