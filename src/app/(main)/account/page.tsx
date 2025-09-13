@@ -344,17 +344,24 @@ export default function WalletPage() {
       fetchBalance();
     } catch (err: any) {
       let errorMessage = 'Failed to process withdrawal.';
+      
+      // Extract error message from various possible error structures
       if (err?.message) {
         errorMessage = err.message;
       } else if (err?.error) {
         errorMessage = err.error;
-      }else if (err?.message) {
-        errorMessage = err.message;
+      } else if (err?.response?.data?.error) {
+        errorMessage = err.response.data.error;
+      } else if (err?.response?.data?.errorbody?.message) {
+        errorMessage = err.response.data.errorbody.message;
+      } else if (err?.response?.data?.message) {
+        errorMessage = err.response.data.message;
       }
+      
       setWithdrawError(errorMessage);
       toast({
         title: 'Withdrawal Error',
-        description: errorMessage || 'Payouts would be available soon' ,
+        description: errorMessage,
         variant: 'destructive',
       });
     } finally {

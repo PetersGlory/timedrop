@@ -28,7 +28,21 @@ async function apiFetch(endpoint: string, options: RequestInit = {}, token?: str
       return; // stop execution
     }
 
-    throw new Error(error.message || error.response.data.message || error.response.data.error || 'API Error');
+    // Extract error message from various possible response structures
+    let errorMessage = 'API Error';
+    if (error.error) {
+      errorMessage = error.error;
+    } else if (error.errorbody && error.errorbody.message) {
+      errorMessage = error.errorbody.message;
+    } else if (error.message) {
+      errorMessage = error.message;
+    } else if (error.response && error.response.data && error.response.data.message) {
+      errorMessage = error.response.data.message;
+    } else if (error.response && error.response.data && error.response.data.error) {
+      errorMessage = error.response.data.error;
+    }
+
+    throw new Error(errorMessage);
   }
 
   return res.json();
