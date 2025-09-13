@@ -332,6 +332,9 @@ export default function MarketDetailPage({
       }
     } finally {
       setLoading(false);
+      setTimeout(()=>{
+        router.push("/portfolio")
+      },1000)
     }
   };
 
