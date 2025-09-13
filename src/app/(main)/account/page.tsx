@@ -354,7 +354,7 @@ export default function WalletPage() {
       setWithdrawError(errorMessage);
       toast({
         title: 'Withdrawal Error',
-        description: errorMessage,
+        description: 'Payouts would be available soon' || errorMessage,
         variant: 'destructive',
       });
     } finally {
