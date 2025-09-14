@@ -619,7 +619,7 @@ function TradeForm({
               }`}
             >
               <span>{amount.toLocaleString()}</span>
-              <span className="text-[10px] text-gray-400 hover:text-gray-200 mt-[-10%]">
+              <span className={`text-[10px] text-gray-400 hover:text-gray-200 ${amount !== 100000 ? "mt-[-10%]" : ""}`}>
                 {contracts} contract{contracts > 1 ? "s" : ""}
               </span>
             </Button>
