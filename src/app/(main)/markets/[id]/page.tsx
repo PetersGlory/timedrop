@@ -607,18 +607,23 @@ function TradeForm({
             // Calculate number of contracts (assuming 1 contract = 1000)
             const contracts = amount / 1000;
             return (
-              <Button
-                key={`trade-${amount}`}
-                variant={tradeAmount === amount ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setTradeAmount(amount)}
-                className="flex-grow min-w-[40%] sm:min-w-[120px] max-w-[48%] pt-1 sm:max-w-[160px] text-xs sm:text-sm flex flex-col items-center"
-              >
-                <span>{amount.toLocaleString()}</span>
-                <span className="text-[10px] text-gray-400 hover:text-gray-200 mt-[-10%]">
-                  {contracts} contract{contracts > 1 ? 's' : ''}
-                </span>
-              </Button>
+            <Button
+              key={`trade-${amount}`}
+              variant={tradeAmount === amount ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setTradeAmount(amount)}
+              className={`pt-1 text-xs sm:text-sm flex flex-col items-center ${
+                amount === 100000
+                  ? "w-full" // full width if 100000
+                  : "flex-grow min-w-[40%] sm:min-w-[120px] max-w-[48%] sm:max-w-[160px]"
+              }`}
+            >
+              <span>{amount.toLocaleString()}</span>
+              <span className="text-[10px] text-gray-400 hover:text-gray-200 mt-[-10%]">
+                {contracts} contract{contracts > 1 ? "s" : ""}
+              </span>
+            </Button>
+            
             );
           })}
         </div>
