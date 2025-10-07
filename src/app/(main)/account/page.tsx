@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -46,6 +46,15 @@ export default function WalletPage() {
   const [banks, setBanks] = useState<{ name: string; code: string }[]>([]);
   const [isValidatingAccount, setIsValidatingAccount] = useState(false);
   const [accountName, setAccountName] = useState<string | null>(null);
+  const [bankSearch, setBankSearch] = useState('');
+
+  const filteredBanks = useMemo(() => {
+    const query = bankSearch.trim().toLowerCase();
+    if (!query) return banks;
+    return banks.filter((bank) =>
+      (bank.name || '').toLowerCase().includes(query) || (bank.code || '').toLowerCase().includes(query)
+    );
+  }, [banks, bankSearch]);
 
   // Fetch wallet balance on mount and after deposit/withdraw
   const fetchBalance = async () => {
@@ -393,6 +402,17 @@ export default function WalletPage() {
           <form onSubmit={handleWithdrawSubmit} className="space-y-4">
             <div>
               <Label htmlFor="withdraw-bank-name">Bank</Label>
+                <div className="space-y-2">
+                  <Input
+                    id="withdraw-bank-search"
+                    type="text"
+                    value={bankSearch}
+                    onChange={(e) => setBankSearch(e.target.value)}
+                    placeholder="Search bank by name or code"
+                    disabled={isLoading || banks.length === 0}
+                    className="w-full"
+                    autoComplete="off"
+                  />
                 <select
                  id="withdraw-bank-name"
                  value={withdrawBankCode}
@@ -411,14 +431,19 @@ export default function WalletPage() {
                  required
                >
                  <option value="">
-                   {banks.length === 0 ? 'Loading banks...' : 'Select Bank'}
+                   {banks.length === 0
+                     ? 'Loading banks...'
+                     : filteredBanks.length === 0 && bankSearch
+                       ? 'No banks match your search'
+                       : 'Select Bank'}
                  </option>
-                 {banks && banks.length > 0 && banks.map((bank) => (
+                 {filteredBanks && filteredBanks.length > 0 && filteredBanks.map((bank) => (
                    <option key={bank.code} value={bank.code}>
                      {bank.name}
                    </option>
                  ))}
                </select>
+                </div>
             </div>
             <div>
               <Label htmlFor="withdraw-account-number">Account Number</Label>

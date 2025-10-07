@@ -319,6 +319,9 @@ export default function MarketDetailPage({
           maximumFractionDigits: 0,
         })} of "${market.question}" has been submitted.`,
       });
+      setTimeout(()=>{
+        router.replace("/portfolio")
+      },1000)
     } catch (err: any) {
       toast({
         variant: 'destructive',
