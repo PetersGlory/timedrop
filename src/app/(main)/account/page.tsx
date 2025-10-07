@@ -12,6 +12,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Label } from '@/components/ui/label';
 import { toast } from '@/hooks/use-toast';
 import { Wallet } from 'lucide-react';
@@ -47,6 +48,7 @@ export default function WalletPage() {
   const [isValidatingAccount, setIsValidatingAccount] = useState(false);
   const [accountName, setAccountName] = useState<string | null>(null);
   const [bankSearch, setBankSearch] = useState('');
+  const [isBankPopoverOpen, setIsBankPopoverOpen] = useState(false);
 
   const filteredBanks = useMemo(() => {
     const query = bankSearch.trim().toLowerCase();
@@ -402,48 +404,67 @@ export default function WalletPage() {
           <form onSubmit={handleWithdrawSubmit} className="space-y-4">
             <div>
               <Label htmlFor="withdraw-bank-name">Bank</Label>
-                <div className="space-y-2">
-                  <Input
-                    id="withdraw-bank-search"
-                    type="text"
-                    value={bankSearch}
-                    onChange={(e) => setBankSearch(e.target.value)}
-                    placeholder="Search bank by name or code"
+              <Popover open={isBankPopoverOpen} onOpenChange={(open) => {
+                setIsBankPopoverOpen(open);
+                if (open) setBankSearch('');
+              }}>
+                <PopoverTrigger asChild>
+                  <button
+                    id="withdraw-bank-name"
+                    type="button"
+                    className="w-full border rounded px-3 py-2 bg-background text-foreground text-left flex items-center justify-between"
                     disabled={isLoading || banks.length === 0}
-                    className="w-full"
-                    autoComplete="off"
-                  />
-                <select
-                 id="withdraw-bank-name"
-                 value={withdrawBankCode}
-                 onChange={e => {
-                   setWithdrawBankCode(e.target.value);
-                   // Clear previous validation when bank changes
-                   if (accountName) {
-                     setAccountName(null);
-                   }
-                   if (withdrawError) {
-                     setWithdrawError(null);
-                   }
-                 }}
-                 disabled={isLoading || banks.length === 0}
-                 className="w-full border rounded px-3 py-2 bg-background text-foreground"
-                 required
-               >
-                 <option value="">
-                   {banks.length === 0
-                     ? 'Loading banks...'
-                     : filteredBanks.length === 0 && bankSearch
-                       ? 'No banks match your search'
-                       : 'Select Bank'}
-                 </option>
-                 {filteredBanks && filteredBanks.length > 0 && filteredBanks.map((bank) => (
-                   <option key={bank.code} value={bank.code}>
-                     {bank.name}
-                   </option>
-                 ))}
-               </select>
-                </div>
+                  >
+                    <span className="truncate">
+                      {withdrawBankCode
+                        ? (banks.find(b => b.code === withdrawBankCode)?.name || 'Select Bank')
+                        : (banks.length === 0 ? 'Loading banks...' : 'Select Bank')}
+                    </span>
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4 opacity-70">
+                      <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z" clipRule="evenodd" />
+                    </svg>
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-2" align="start">
+                  <div className="space-y-2">
+                    <Input
+                      type="text"
+                      value={bankSearch}
+                      onChange={(e) => setBankSearch(e.target.value)}
+                      placeholder="Search bank by name or code"
+                      autoFocus
+                      autoComplete="off"
+                    />
+                    <div className="max-h-56 overflow-auto border rounded">
+                      {banks.length === 0 ? (
+                        <div className="px-3 py-2 text-sm text-muted-foreground">Loading banks...</div>
+                      ) : filteredBanks.length === 0 ? (
+                        <div className="px-3 py-2 text-sm text-muted-foreground">No banks match your search</div>
+                      ) : (
+                        <ul className="divide-y">
+                          {filteredBanks.map((bank) => (
+                            <li key={bank.code}>
+                              <button
+                                type="button"
+                                className={`w-full text-left px-3 py-2 hover:bg-accent hover:text-accent-foreground ${withdrawBankCode === bank.code ? 'bg-accent/50' : ''}`}
+                                onClick={() => {
+                                  setWithdrawBankCode(bank.code);
+                                  setIsBankPopoverOpen(false);
+                                  if (accountName) setAccountName(null);
+                                  if (withdrawError) setWithdrawError(null);
+                                }}
+                              >
+                                <span className="block text-sm">{bank.name}</span>
+                                <span className="block text-xs text-muted-foreground">{bank.code}</span>
+                              </button>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                  </div>
+                </PopoverContent>
+              </Popover>
             </div>
             <div>
               <Label htmlFor="withdraw-account-number">Account Number</Label>
