@@ -455,7 +455,7 @@ export default function WalletPage() {
                                 }}
                               >
                                 <span className="block text-sm">{bank.name}</span>
-                                <span className="block text-xs text-muted-foreground">{bank.code}</span>
+                                {/* <span className="block text-xs text-muted-foreground">{bank.code}</span> */}
                               </button>
                             </li>
                           ))}
