@@ -601,7 +601,7 @@ function TradeForm({
   return (
     <div className="pt-4 space-y-4">
       <div className="space-y-2">
-        <Label>Trade Contract</Label>
+        <Label>Trade Share</Label>
         <div className="flex flex-wrap gap-2">
           {TRADE_AMOUNTS.map((amount) => {
             // Calculate number of contracts (assuming 1 contract = 1000)
@@ -620,7 +620,7 @@ function TradeForm({
             >
               <span>{amount.toLocaleString()}</span>
               <span className={`text-[10px] text-gray-400 hover:text-gray-200 ${amount !== 100000 ? "mt-[-10%]" : "mt-[-5%]"}`}>
-                {contracts} contract{contracts > 1 ? "s" : ""}
+                {contracts} Share{contracts > 1 ? "s" : ""}
               </span>
             </Button>
             
@@ -630,7 +630,7 @@ function TradeForm({
       </div>
       <div className="border-t pt-4 space-y-2">
         <div className="flex justify-between text-sm">
-          <span className="text-muted-foreground">Your Contract:</span>
+          <span className="text-muted-foreground">Your Shares:</span>
           <span className="font-medium">{estimatedCost.toFixed(2) +"/"+calculateContracts(estimatedCost) +"C"}</span>
         </div>
         <div className="flex justify-between text-sm">
