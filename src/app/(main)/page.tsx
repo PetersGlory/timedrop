@@ -34,6 +34,8 @@ const orderedCategories = [
   'Misc',
 ];
 
+// Note: Metadata is handled in the root layout for client components
+
 // Helper function to check if market is closed based on endDate and time
 const isMarketClosed = (endDate: string): boolean => {
   const now = new Date();

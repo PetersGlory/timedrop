@@ -113,7 +113,7 @@ export default function PortfolioPage() {
             <CardContent>
               {bookmarks.length > 0 ? (
                 <ul className="space-y-3">
-                  {bookmarks.map((market) => (
+                  {bookmarks.map((market:any) => (
                     <li key={market.id}>
                       <Link
                         href={`/markets/${market.id}`}

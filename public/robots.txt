@@ -1,0 +1,22 @@
+User-agent: *
+Allow: /
+
+# Disallow private/sensitive areas
+Disallow: /api/
+Disallow: /_next/
+Disallow: /admin/
+Disallow: /dashboard/
+
+# Allow important pages
+Allow: /markets/
+Allow: /portfolio
+Allow: /account
+Allow: /predict
+Allow: /referral
+Allow: /terms
+
+# Sitemap location
+Sitemap: https://timedrop.live/sitemap.xml
+
+# Crawl delay (optional - be respectful to servers)
+Crawl-delay: 1
