@@ -40,7 +40,7 @@ export default function FrameworkPage() {
         <div className="space-y-2">
           <h3 className="text-lg font-semibold">1. Security &amp; Data Protection</h3>
           <p className="text-muted-foreground">
-            We implement bank-grade security protocols, including end-to-end encryption, two-factor authentication (2FA), and regular third-party security audits. User data is handled in strict accordance with the Nigerian Data Protection Act (NDPA). We employ a strict privacy-by-design approach, ensuring that personal information is collected only for necessary purposes and is never sold to third parties.
+            We employ a strict privacy-by-design approach, ensuring that personal information is collected only for necessary purposes and is never sold to third parties.
           </p>
         </div>
 
@@ -48,7 +48,7 @@ export default function FrameworkPage() {
           <h3 className="text-lg font-semibold">2. Financial Safeguards</h3>
           <ul className="list-disc pl-6 text-muted-foreground space-y-2">
             <li>
-              <span className="font-medium text-foreground">Segregated Accounts:</span> All user funds are held in segregated trust accounts with reputable Nigerian financial institutions, separate from company operational funds.
+              <span className="font-medium text-foreground">Segregated Accounts:</span> All user funds are held in segregated trust accounts with reputable financial institutions, separate from company operational funds.
             </li>
             <li>
               <span className="font-medium text-foreground">Transparent Settlement:</span> All market settlements are automated, transparent, and based on pre-defined, verifiable data sources to prevent any manual intervention or bias.
