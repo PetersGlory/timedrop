@@ -180,6 +180,9 @@ export default function MainLayout({
             <Link href="/referral" className="transition-colors hover:text-primary">
               Referral $
             </Link>
+            <Link href="/framework" rel="noopener noreferrer" className="transition-colors hover:text-primary">
+              Framework
+            </Link>
           </nav>
         </div>
       </footer>
