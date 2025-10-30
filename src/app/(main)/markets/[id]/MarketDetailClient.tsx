@@ -188,7 +188,7 @@ export default function MarketDetailClient({
     : 50;
   
   const estimatedCost = tradeAmount * (currentPrice / 100);
-  const maxProfit = tradeAmount - estimatedCost;
+  const maxProfit = tradeAmount;
 
   // Fetch market data
   async function fetchMarket() {
