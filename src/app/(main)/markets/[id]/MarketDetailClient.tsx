@@ -149,7 +149,7 @@ function TradeForm({
         <div className="flex justify-between text-sm font-semibold">
           <span className="text-foreground">Minimum Payout:</span>
           <span className="text-foreground">
-            {(estimatedCost + maxProfit).toFixed(2) + "/" + calculateContracts((estimatedCost + maxProfit)) + "C"}
+            {(maxProfit).toFixed(2) + "/" + calculateContracts((maxProfit)) + "C"}
           </span>
         </div>
       </div>
