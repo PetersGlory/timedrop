@@ -138,18 +138,18 @@ function TradeForm({
       <div className="border-t pt-4 space-y-2">
         <div className="flex justify-between text-sm">
           <span className="text-muted-foreground">Your Shares:</span>
-          <span className="font-medium">{estimatedCost.toFixed(2) + "/" + calculateContracts(estimatedCost) + "C"}</span>
+          <span className="font-medium">{tradeAmount.toFixed(2) + "/" + calculateContracts(tradeAmount) + "C"}</span>
         </div>
         <div className="flex justify-between text-sm">
           <span className="text-muted-foreground">Profit:</span>
           <span className="font-medium text-green-600">
-            {maxProfit.toFixed(2) + "/" + calculateContracts(maxProfit) + "C"}
+            {(tradeAmount *2).toFixed(2) + "/" + calculateContracts((tradeAmount *2)) + "C"}
           </span>
         </div>
         <div className="flex justify-between text-sm font-semibold">
           <span className="text-foreground">Minimum Payout:</span>
           <span className="text-foreground">
-            {(maxProfit).toFixed(2) + "/" + calculateContracts((maxProfit)) + "C"}
+            {((tradeAmount *2)).toFixed(2) + "/" + calculateContracts(((tradeAmount *2))) + "C"}
           </span>
         </div>
       </div>
