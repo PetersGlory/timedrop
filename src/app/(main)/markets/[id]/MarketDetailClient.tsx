@@ -105,11 +105,52 @@ function TradeForm({
   const calculateContracts = (anyVal: any) => {
     return anyVal / 1000;
   };
-  
+
+  // Local input for user custom amount
+  const [customAmount, setCustomAmount] = useState(tradeAmount > 0 ? tradeAmount : '');
+
+  // Keep customAmount in sync with prop, but don't override if user is typing
+  React.useEffect(() => {
+    // Only update if tradeAmount matches one of the quick-pick, or user hasn't entered a custom amount
+    if (tradeAmount !== Number(customAmount) && customAmount === '') {
+      setCustomAmount(tradeAmount > 0 ? tradeAmount : '');
+    }
+  }, [tradeAmount]);
+
+  const handleCustomAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Validate integer input or empty
+    const val = e.target.value.replace(/[^0-9]/g, '');
+    setCustomAmount(val);
+    if (val !== '') {
+      setTradeAmount(Number(val));
+    }
+  };
+
   return (
     <div className="pt-4 space-y-4">
       <div className="space-y-2">
         <Label>Trade Share</Label>
+        {/* User input section */}
+        <div className="flex gap-2 items-center mb-2">
+          <input
+            type="number"
+            min={1}
+            step={100}
+            className="block rounded-md border border-muted px-3 py-1 w-40 text-sm focus:outline-none focus:border-primary"
+            placeholder="Enter amount"
+            value={customAmount}
+            onChange={handleCustomAmountChange}
+            onBlur={() => {
+              // If input is empty or 0 setTradeAmount(0)
+              if (customAmount === '' || Number(customAmount) <= 0) {
+                setTradeAmount(0);
+              }
+            }}
+            aria-label="Enter custom trade amount"
+          />
+          <span className="text-xs text-muted-foreground">₦</span>
+        </div>
+        {/* Quick pick buttons */}
         <div className="flex flex-wrap gap-2">
           {TRADE_AMOUNTS.map((amount) => {
             // Calculate number of contracts (assuming 1 contract = 1000)
@@ -119,7 +160,10 @@ function TradeForm({
                 key={`trade-${amount}`}
                 variant={tradeAmount === amount ? 'default' : 'outline'}
                 size="sm"
-                onClick={() => setTradeAmount(amount)}
+                onClick={() => {
+                  setTradeAmount(amount);
+                  setCustomAmount(String(amount));
+                }}
                 className={`pt-1 text-xs sm:text-sm flex flex-col items-center ${
                   amount === 100000
                     ? "w-full" // full width if 100000
