@@ -303,14 +303,22 @@ export default function MarketDetailClient({
         description: `Successfully placed ${side} order for ₦${tradeAmount.toLocaleString()}`,
       });
       
-      // Refresh market data
-      fetchMarket();
+      setTimeout(()=>{
+        router.replace("/portfolio")
+      },1000)
     } catch (err: any) {
       toast({
         title: 'Order Failed',
         description: err.message || 'Failed to place order',
         variant: 'destructive',
       });
+      if(err.message == "Insufficient wallet balance"){
+        setTimeout(()=>{
+          router.replace("/account")
+        },1000)
+      }
+    } finally {
+      setLoading(false);
     }
   }, [token, tradeAmount, marketId, router]);
 
