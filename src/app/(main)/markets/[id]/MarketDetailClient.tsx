@@ -136,7 +136,7 @@ function TradeForm({
             type="number"
             min={1}
             step={100}
-            className="block rounded-md border border-muted px-3 py-1 w-40 text-sm focus:outline-none focus:border-primary"
+            className="block flex-1 rounded-md border border-muted px-3 py-2 w-40 text-sm focus:outline-none focus:border-primary"
             placeholder="Enter amount"
             value={customAmount}
             onChange={handleCustomAmountChange}
@@ -291,10 +291,10 @@ export default function MarketDetailClient({
 
     try {
       const orderData = {
-        marketId: marketId,
-        side: side.toUpperCase(),
-        amount: tradeAmount,
-        type: 'MARKET',
+        marketId: market.id,
+        type: side.toUpperCase() === 'YES' ? 'BUY' : 'SELL', // 'YES' or 'NO'
+        quantity: tradeAmount,
+        price: tradeAmount,
       };
 
       await placeOrder(orderData, token);

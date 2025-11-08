@@ -17,7 +17,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { Info, Search } from 'lucide-react';
+import { Info, Search, ChevronLeft, ChevronRight } from 'lucide-react';
 
 const orderedCategories = [
   'News',
@@ -59,6 +59,8 @@ export default function MarketsPage() {
   const [markets, setMarkets] = useState<Market[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(12); // 12 items per page (4 rows x 3 columns on large screens)
 
   useEffect(() => {
     async function fetchMarkets() {
@@ -101,6 +103,26 @@ export default function MarketsPage() {
   };
   
   const marketsForCurrentTab = getMarketsByCategory(activeTab);
+
+  // Reset to page 1 when tab or search changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeTab, searchTerm]);
+
+  // Calculate pagination
+  const totalPages = Math.ceil(marketsForCurrentTab.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedMarkets = marketsForCurrentTab.slice(startIndex, endIndex);
+
+  // Pagination handlers
+  const goToPage = (page: number) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+      // Scroll to top of markets section
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
 
   // Debug logging (remove in production)
   useEffect(() => {
@@ -207,14 +229,207 @@ export default function MarketsPage() {
         )}
 
         <TabsContent value={activeTab} className="mt-6">
+          {/* Pagination Controls */}
+          {marketsForCurrentTab.length > 0 && totalPages > 1 && (
+            <div className="flex flex-col items-center justify-center gap-4 mt-8 mb-4">
+              <div className="flex items-center gap-2">
+                {/* Previous button */}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={currentPage <= 1}
+                  onClick={() => goToPage(currentPage - 1)}
+                >
+                  <ChevronLeft className="h-4 w-4 mr-1" />
+                  Previous
+                </Button>
+                
+                {/* Page numbers */}
+                <div className="flex items-center gap-1">
+                  {(() => {
+                    const pages: (number | string)[] = [];
+                    const showEllipsis = totalPages > 7;
+                    
+                    if (!showEllipsis) {
+                      // Show all pages if 7 or fewer
+                      for (let i = 1; i <= totalPages; i++) {
+                        pages.push(i);
+                      }
+                    } else {
+                      // Always show first page
+                      pages.push(1);
+                      
+                      if (currentPage <= 4) {
+                        // Near the start: show 1, 2, 3, 4, 5, ..., last
+                        for (let i = 2; i <= 5; i++) {
+                          pages.push(i);
+                        }
+                        pages.push('...');
+                        pages.push(totalPages);
+                      } else if (currentPage >= totalPages - 3) {
+                        // Near the end: show 1, ..., last-4, last-3, last-2, last-1, last
+                        pages.push('...');
+                        for (let i = totalPages - 4; i <= totalPages; i++) {
+                          pages.push(i);
+                        }
+                      } else {
+                        // In the middle: show 1, ..., current-1, current, current+1, ..., last
+                        pages.push('...');
+                        for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+                          pages.push(i);
+                        }
+                        pages.push('...');
+                        pages.push(totalPages);
+                      }
+                    }
+                    
+                    return pages.map((page, index) => {
+                      if (page === '...') {
+                        return (
+                          <span key={`ellipsis-${index}`} className="text-muted-foreground px-1">
+                            ...
+                          </span>
+                        );
+                      }
+                      const pageNum = page as number;
+                      return (
+                        <Button
+                          key={pageNum}
+                          variant={pageNum === currentPage ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => goToPage(pageNum)}
+                          className="w-8 h-8 p-0"
+                        >
+                          {pageNum}
+                        </Button>
+                      );
+                    });
+                  })()}
+                </div>
+                
+                {/* Next button */}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={currentPage >= totalPages}
+                  onClick={() => goToPage(currentPage + 1)}
+                >
+                  Next
+                  <ChevronRight className="h-4 w-4 ml-1" />
+                </Button>
+              </div>
+              
+              {/* Page info */}
+              <div className="text-sm text-muted-foreground">
+                Showing {startIndex + 1}-{Math.min(endIndex, marketsForCurrentTab.length)} of {marketsForCurrentTab.length} markets
+              </div>
+            </div>
+          )}
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {marketsForCurrentTab.map((market) => (
+            {paginatedMarkets.map((market) => (
               <MarketCard key={market.id} market={market} />
             ))}
           </div>
           {marketsForCurrentTab.length === 0 && (
             <div className="text-center py-8 text-muted-foreground">
               No markets found.
+            </div>
+          )}
+          
+          {/* Pagination Controls */}
+          {marketsForCurrentTab.length > 0 && totalPages > 1 && (
+            <div className="flex flex-col items-center justify-center gap-4 mt-8">
+              <div className="flex items-center gap-2">
+                {/* Previous button */}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={currentPage <= 1}
+                  onClick={() => goToPage(currentPage - 1)}
+                >
+                  <ChevronLeft className="h-4 w-4 mr-1" />
+                  Previous
+                </Button>
+                
+                {/* Page numbers */}
+                <div className="flex items-center gap-1">
+                  {(() => {
+                    const pages: (number | string)[] = [];
+                    const showEllipsis = totalPages > 7;
+                    
+                    if (!showEllipsis) {
+                      // Show all pages if 7 or fewer
+                      for (let i = 1; i <= totalPages; i++) {
+                        pages.push(i);
+                      }
+                    } else {
+                      // Always show first page
+                      pages.push(1);
+                      
+                      if (currentPage <= 4) {
+                        // Near the start: show 1, 2, 3, 4, 5, ..., last
+                        for (let i = 2; i <= 5; i++) {
+                          pages.push(i);
+                        }
+                        pages.push('...');
+                        pages.push(totalPages);
+                      } else if (currentPage >= totalPages - 3) {
+                        // Near the end: show 1, ..., last-4, last-3, last-2, last-1, last
+                        pages.push('...');
+                        for (let i = totalPages - 4; i <= totalPages; i++) {
+                          pages.push(i);
+                        }
+                      } else {
+                        // In the middle: show 1, ..., current-1, current, current+1, ..., last
+                        pages.push('...');
+                        for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+                          pages.push(i);
+                        }
+                        pages.push('...');
+                        pages.push(totalPages);
+                      }
+                    }
+                    
+                    return pages.map((page, index) => {
+                      if (page === '...') {
+                        return (
+                          <span key={`ellipsis-${index}`} className="text-muted-foreground px-1">
+                            ...
+                          </span>
+                        );
+                      }
+                      const pageNum = page as number;
+                      return (
+                        <Button
+                          key={pageNum}
+                          variant={pageNum === currentPage ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => goToPage(pageNum)}
+                          className="w-8 h-8 p-0"
+                        >
+                          {pageNum}
+                        </Button>
+                      );
+                    });
+                  })()}
+                </div>
+                
+                {/* Next button */}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={currentPage >= totalPages}
+                  onClick={() => goToPage(currentPage + 1)}
+                >
+                  Next
+                  <ChevronRight className="h-4 w-4 ml-1" />
+                </Button>
+              </div>
+              
+              {/* Page info */}
+              <div className="text-sm text-muted-foreground">
+                Showing {startIndex + 1}-{Math.min(endIndex, marketsForCurrentTab.length)} of {marketsForCurrentTab.length} markets
+              </div>
             </div>
           )}
         </TabsContent>

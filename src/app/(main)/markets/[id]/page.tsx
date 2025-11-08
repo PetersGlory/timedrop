@@ -15,8 +15,8 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
       };
     }
 
-    const marketTitle = `${market.question} | Prediction Market`;
-    const marketDescription = `Predict the outcome: ${market.question}. Trade Yes/No shares on this ${market.category.toLowerCase()} prediction market. Market closes ${new Date(market.endDate).toLocaleDateString()}.`;
+    const marketTitle = `${market?.question} | Prediction Market`;
+    const marketDescription = `Predict the outcome: ${market?.question}. Trade Yes/No shares on this ${market.category.toLowerCase()} prediction market. Market closes ${new Date(market.endDate).toLocaleDateString()}.`;
 
     return {
       title: marketTitle,
