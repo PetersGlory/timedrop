@@ -322,6 +322,7 @@ export default function MarketDetailClient({
     }
   }, [token, tradeAmount, marketId, router]);
 
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">

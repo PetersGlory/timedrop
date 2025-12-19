@@ -2,7 +2,16 @@
 import type { Market, Order } from './definitions';
 import { eachHourOfInterval, format, addHours, subHours } from 'date-fns';
 
+function seededRandom(seed: number) {
+  const x = Math.sin(seed++) * 10000;
+  return x - Math.floor(x);
+}
+
 export const generateMarketHistory = (startDate: string, endDate: string, initialChance: number) => {
+
+  const seed = new Date(startDate).getTime();
+  let seedCounter = 0;
+  
   const start = new Date(startDate);
   const end = new Date(endDate);
   const today = new Date();
@@ -20,9 +29,9 @@ export const generateMarketHistory = (startDate: string, endDate: string, initia
     return [{ date: format(start, 'HH:mm'), chance: initialChance }];
   }
 
-  return hourRange.map((date) => {
-    // Simulate a gentle random walk for the probability
-    const change = (Math.random() - 0.5) * 5; // Change by up to +/- 2.5 percentage points
+  return hourRange.map((date, index) => {
+    // Simulate a gentle random walk for the probability using seededRandom
+    const change = (seededRandom(seed + index) - 0.5) * 5; // Change by up to +/- 2.5 percentage points
     let newChance = lastChance + change;
     
     // Clamp the chance between 5 and 95 to keep it realistic
