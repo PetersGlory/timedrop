@@ -1,12 +1,23 @@
 import type { Metadata } from 'next';
 import { getMarketById } from '../../account/api';
 import MarketDetailClient from './MarketDetailClient';
+import { useEffect, useState } from 'react';
 
 // Generate metadata for individual market pages
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   try {
     const { id } = await params;
     const market = await getMarketById(id);
+    const [marketName, setMarketName] = useState("");
+
+    const handleGetName = () =>{
+      const nameMarket = localStorage.getItem("markeName");
+      setMarketName(nameMarket as string);
+    }
+    
+    useEffect(()=>{
+      handleGetName();
+    },[])
     
     if (!market) {
       return {
@@ -15,7 +26,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
       };
     }
 
-    const marketTitle = `${market?.question} | Prediction Market`;
+    const marketTitle = `${marketName || market?.question} | Prediction Market`;
     const marketDescription = `Predict the outcome: ${market?.question}. Trade Yes/No shares on this ${market.category.toLowerCase()} prediction market. Market closes ${new Date(market.endDate).toLocaleDateString()}.`;
 
     return {

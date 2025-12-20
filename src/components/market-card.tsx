@@ -72,6 +72,7 @@ export function MarketCard({ market }: { market: Market }) {
             <CardTitle className="text-lg font-semibold leading-snug">
               <Link onClick={()=>{
                 localStorage.setItem("marketId", market.id)
+                localStorage.setItem("markeName", market.question)
               }} href={`/markets/${market.id}`} className="hover:text-primary transition-colors">
                 {market.question}
               </Link>
