@@ -183,6 +183,12 @@ export default function MainLayout({
             <Link href="/framework" rel="noopener noreferrer" className="transition-colors hover:text-primary">
               Framework
             </Link>
+            <a
+              href="mailto:support@thetimedrop.com"
+              className="transition-colors hover:text-primary"
+            >
+              support@thetimedrop.com
+            </a>
           </nav>
         </div>
       </footer>
