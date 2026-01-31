@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Eye, EyeOff, X, Mail, CheckCircle } from "lucide-react";
 import Link from "next/link";
 import { toast } from "@/hooks/use-toast";
+import { parseJwt } from "@/utils/google";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -24,22 +25,7 @@ export default function LoginPage() {
   const auth = useAuth();
   const googleDivRef = useRef<HTMLDivElement | null>(null);
 
-  // Decode Google credential JWT without external deps
-  function parseJwt(token: string): any {
-    try {
-      const base64Url = token.split(".")[1];
-      const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
-      const jsonPayload = decodeURIComponent(
-        atob(base64)
-          .split("")
-          .map(c => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
-          .join("")
-      );
-      return JSON.parse(jsonPayload);
-    } catch {
-      return null;
-    }
-  }
+  
 
   // Initialize Google Identity Services
   useEffect(() => {
@@ -204,7 +190,7 @@ export default function LoginPage() {
             <h1 className="text-3xl font-bold">Welcome Back</h1>
             <p className="text-muted-foreground mt-1">Sign in to your Timedrop account</p>
           </div>
-          {/* <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label htmlFor="email" className="block text-sm font-medium mb-1">
                 Email
@@ -264,13 +250,13 @@ export default function LoginPage() {
                 "Login"
               )}
             </Button>
-          </form> */}
+          </form>
           <div className="mt-4">
-            {/* <div className="flex items-center gap-2 my-4">
+            <div className="flex items-center gap-2 my-4">
               <div className="h-px bg-border w-full" />
               <span className="text-xs text-muted-foreground">or</span>
               <div className="h-px bg-border w-full" />
-            </div> */}
+            </div>
             <div className="flex flex-col gap-3">
               <div ref={googleDivRef} className="flex justify-center" />
               {!process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID && (
@@ -280,7 +266,7 @@ export default function LoginPage() {
               )}
             </div>
           </div>
-          {/* <div className="flex justify-between mt-4 text-sm">
+          <div className="flex justify-between mt-4 text-sm">
             <a href="/register" className="text-primary underline">
               Create account
             </a>
@@ -288,9 +274,9 @@ export default function LoginPage() {
               onClick={() => setShowForgotPassword(true)}
               className="text-muted-foreground hover:text-primary hover:underline transition-colors"
             >
-              Forgot password?
+              {/* Forgot password? */}
             </button>
-          </div> */}
+          </div>
         </div>
       </div>
 
