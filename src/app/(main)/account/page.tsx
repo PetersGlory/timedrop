@@ -606,7 +606,7 @@ export default function WalletPage() {
                 </div>
               </div>
               <div className="text-xs text-muted-foreground">
-                {amount && !isNaN(Number(amount)) && Number(amount) > 0 ? (
+                {/* {amount && !isNaN(Number(amount)) && Number(amount) > 0 ? (
                   <span>
                     Payment processing fee (2.0%): ₦{(Number(amount) * 0.02).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}.<br />
                     7.5% VAT on fee: ₦{(Number(amount) * 0.02 * 0.075).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}.<br />
@@ -615,8 +615,8 @@ export default function WalletPage() {
                     </strong>
                   </span>
                 ) : (
-                  <>Please note: 7.5% of the 2.0% payment processing fee will be deducted from your deposit amount.</>
-                )}
+                )} */}
+                <>Kindly note: VAT fee attaached.</>
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <Button className="w-full" onClick={handleDeposit} disabled={isLoading || loadingBalance}>
