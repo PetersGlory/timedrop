@@ -1,6 +1,6 @@
 // API utility for wallet-related actions and authentication
 // Backend base URL
-const BASE_URL = 'http://localhost:450/api'; //'https://backendapi.timedrop.live/api'; // || 'https://timedrop-backend.onrender.com/api';
+const BASE_URL = 'https://backendapi.timedrop.live/api'; // || 'https://timedrop-backend.onrender.com/api';
 
 // Helper for authenticated fetch
 async function apiFetch(endpoint: string, options: RequestInit = {}, token?: string) {
