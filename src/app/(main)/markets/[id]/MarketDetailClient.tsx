@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   ChartContainer,
@@ -19,9 +20,9 @@ import {
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from 'recharts';
 import { toast } from '@/hooks/use-toast';
 import { CountdownTimer } from '@/components/countdown-timer';
-import { ArrowLeft, Share2 } from 'lucide-react';
+import { ArrowLeft, Share2, Tag } from 'lucide-react';
 import { isPast } from 'date-fns';
-import { getMarketById, getProfile, placeOrder } from '../../account/api';
+import { getMarketById, getProfile, placeOrder, placeReferralOrder } from '../../account/api';
 import { useAuth } from '@/context/AuthContext';
 import { generateMarketHistory } from '@/lib/data';
 
@@ -93,6 +94,8 @@ function TradeForm({
   maxProfit,
   onOrderPlacement,
   referralCode,
+  agentReferralCode,
+  setAgentReferralCode,
 }: {
   side: 'Yes' | 'No';
   tradeAmount: number;
@@ -101,6 +104,8 @@ function TradeForm({
   maxProfit: number;
   onOrderPlacement: () => void;
   referralCode: string;
+  agentReferralCode: string;
+  setAgentReferralCode: (code: string) => void;
 }) {
   const calculateContracts = (anyVal: any) => {
     return anyVal / 1000;
@@ -179,6 +184,27 @@ function TradeForm({
           })}
         </div>
       </div>
+
+      {/* Agent Referral Code Input - NEW */}
+      <div className="space-y-2 pt-2 border-t">
+        <Label htmlFor="agentReferralCode" className="flex items-center gap-2">
+          <Tag className="h-4 w-4" />
+          Agent Referral Code (Optional)
+        </Label>
+        <Input
+          id="agentReferralCode"
+          type="text"
+          placeholder="Enter agent code (if you have one)"
+          value={agentReferralCode}
+          onChange={(e) => setAgentReferralCode(e.target.value.toUpperCase())}
+          className="font-mono"
+          maxLength={20}
+        />
+        <p className="text-xs text-muted-foreground">
+          Enter an agent's referral code to support them with this purchase
+        </p>
+      </div>
+
       <div className="border-t pt-4 space-y-2">
         <div className="flex justify-between text-sm">
           <span className="text-muted-foreground">Your Shares:</span>
@@ -192,7 +218,6 @@ function TradeForm({
           <span className="text-muted-foreground">Profit:</span>
           <span className="font-medium text-green-600">
             {(tradeAmount *2).toFixed(2)}
-            {/* + "/" + calculateContracts((tradeAmount *2)) + "C" */}
           </span>
         </div>
         <div className="flex justify-between text-sm font-semibold">
@@ -223,6 +248,7 @@ export default function MarketDetailClient({
   const [loading, setLoading] = useState(!initialMarket);
   const [error, setError] = useState<string | null>(null);
   const [tradeAmount, setTradeAmount] = useState(0);
+  const [agentReferralCode, setAgentReferralCode] = useState('');
   const searchParams = useSearchParams();
   const [referralCode, setReferralCode] = useState<string>('');
   const { token } = useAuth();
@@ -230,6 +256,14 @@ export default function MarketDetailClient({
 
   const side = searchParams.get('side') === 'no' ? 'no' : 'yes';
   const defaultTab = side === 'no' ? 'no' : 'yes';
+
+  // Check for referral code in URL
+  useEffect(() => {
+    const urlRefCode = searchParams.get('ref');
+    if (urlRefCode) {
+      setAgentReferralCode(urlRefCode.toUpperCase());
+    }
+  }, [searchParams]);
 
   // Calculate trading values
   const currentPrice = market?.history && market.history.length > 0 
@@ -297,15 +331,30 @@ export default function MarketDetailClient({
     try {
       const orderData = {
         marketId: market.id,
-        type: side.toUpperCase() === 'YES' ? 'BUY' : 'SELL', // 'YES' or 'NO'
+        type: side.toUpperCase() === 'YES' ? 'BUY' : 'SELL',
         quantity: tradeAmount,
         price: tradeAmount,
+        agentReferralCode: agentReferralCode || null, // Include agent referral code
       };
 
       await placeOrder(orderData, token);
+      
+      // Track referral usage if code was provided
+      if (agentReferralCode) {
+        const placeOrderReferralData = {
+          referralCode: agentReferralCode,
+          marketId: market.id,
+          orderAmount: tradeAmount,
+        };
+        await placeReferralOrder(placeOrderReferralData, token);
+        
+      }
+
       toast({
         title: 'Order Placed',
-        description: `Successfully placed ${side} order for ₦${tradeAmount.toLocaleString()}`,
+        description: agentReferralCode 
+          ? `Successfully placed ${side} order for ₦${tradeAmount.toLocaleString()} using referral code ${agentReferralCode}`
+          : `Successfully placed ${side} order for ₦${tradeAmount.toLocaleString()}`,
       });
       
       setTimeout(()=>{
@@ -325,7 +374,7 @@ export default function MarketDetailClient({
     } finally {
       setLoading(false);
     }
-  }, [token, tradeAmount, marketId, router]);
+  }, [token, tradeAmount, agentReferralCode, marketId, router]);
 
 
   if (loading) {
@@ -559,6 +608,8 @@ export default function MarketDetailClient({
                       maxProfit={maxProfit}
                       onOrderPlacement={() => handleOrderPlacement('Yes')}
                       referralCode={referralCode}
+                      agentReferralCode={agentReferralCode}
+                      setAgentReferralCode={setAgentReferralCode}
                     />
                   </TabsContent>
                   <TabsContent value="no">
@@ -570,6 +621,8 @@ export default function MarketDetailClient({
                       maxProfit={maxProfit}
                       onOrderPlacement={() => handleOrderPlacement('No')}
                       referralCode={referralCode}
+                      agentReferralCode={agentReferralCode}
+                      setAgentReferralCode={setAgentReferralCode}
                     />
                   </TabsContent>
                 </Tabs>

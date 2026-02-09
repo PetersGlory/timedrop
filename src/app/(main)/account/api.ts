@@ -1,6 +1,6 @@
 // API utility for wallet-related actions and authentication
 // Backend base URL
-const BASE_URL = 'https://backendapi.timedrop.live/api'; // || 'https://timedrop-backend.onrender.com/api';
+const BASE_URL = 'http://localhost:450/api'; //'https://backendapi.timedrop.live/api'; // || 'https://timedrop-backend.onrender.com/api';
 
 // Helper for authenticated fetch
 async function apiFetch(endpoint: string, options: RequestInit = {}, token?: string) {
@@ -228,6 +228,42 @@ export async function getOrders(token: string) {
 
 export async function placeOrder(data: any, token: string) {
   return apiFetch('/orders', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }, token);
+}
+
+// Agents
+
+export async function registerAgent(data: any) {
+  return apiFetch('/agents/register', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+
+
+export async function getAgentReferralCode(token: string) {
+  return apiFetch('/agents/referral-code', { method: 'GET' }, token);
+}
+
+export async function getAgent(referralCode: string) {
+  return apiFetch(`/agents?referralCode=${encodeURIComponent(referralCode)}`, { method: 'GET' });
+}
+
+export async function trackReferralUsage(referralCode: string, token: string) {
+  return apiFetch('/agents/track-referral', {
+    method: 'POST',
+    body: JSON.stringify({ referralCode }),
+  }, token);
+}
+
+export async function placeReferralOrder(data: {
+  referralCode: string;
+  marketId: string;
+  orderAmount: number;
+}, token: string) {
+  return apiFetch('/orders/referral', {
     method: 'POST',
     body: JSON.stringify(data),
   }, token);
