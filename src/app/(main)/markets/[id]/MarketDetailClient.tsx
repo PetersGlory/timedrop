@@ -22,7 +22,7 @@ import { toast } from '@/hooks/use-toast';
 import { CountdownTimer } from '@/components/countdown-timer';
 import { ArrowLeft, Share2, Tag } from 'lucide-react';
 import { isPast } from 'date-fns';
-import { getMarketById, getProfile, placeOrder, placeReferralOrder } from '../../account/api';
+import { getMarketById, getProfile, placeOrder, placeOrderWithReferralCode, placeReferralOrder } from '../../account/api';
 import { useAuth } from '@/context/AuthContext';
 import { generateMarketHistory } from '@/lib/data';
 
@@ -337,10 +337,9 @@ export default function MarketDetailClient({
         agentReferralCode: agentReferralCode || null, // Include agent referral code
       };
 
-      await placeOrder(orderData, token);
-      
-      // Track referral usage if code was provided
-      if (agentReferralCode) {
+      if(agentReferralCode && agentReferralCode.length > 0) {
+        
+        await placeOrderWithReferralCode(orderData, token); 
         const placeOrderReferralData = {
           referralCode: agentReferralCode,
           marketId: market.id,
@@ -348,6 +347,8 @@ export default function MarketDetailClient({
         };
         await placeReferralOrder(placeOrderReferralData, token);
         
+      } else {
+        await placeOrder(orderData, token);
       }
 
       toast({

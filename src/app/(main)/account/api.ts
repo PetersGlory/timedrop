@@ -233,6 +233,13 @@ export async function placeOrder(data: any, token: string) {
   }, token);
 }
 
+export async function placeOrderWithReferralCode(data: any, token: string) {
+  return apiFetch('/orders/order-with-code', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }, token);
+}
+
 // Agents
 
 export async function registerAgent(data: any) {
