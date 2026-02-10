@@ -189,19 +189,19 @@ function TradeForm({
       <div className="space-y-2 pt-2 border-t">
         <Label htmlFor="agentReferralCode" className="flex items-center gap-2">
           <Tag className="h-4 w-4" />
-          Agent Referral Code (Optional)
+          Referral Code (Optional)
         </Label>
         <Input
           id="agentReferralCode"
           type="text"
-          placeholder="Enter agent code (if you have one)"
+          placeholder="Enter code (if you have one)"
           value={agentReferralCode}
           onChange={(e) => setAgentReferralCode(e.target.value.toUpperCase())}
           className="font-mono"
           maxLength={20}
         />
         <p className="text-xs text-muted-foreground">
-          Enter an agent's referral code to support them with this purchase
+          Enter a referral code
         </p>
       </div>
 
