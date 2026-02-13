@@ -50,6 +50,18 @@ export default function AgentDashboard() {
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
 
+  useEffect(()=>{
+    const handleLoad = async () =>{
+      const referral = localStorage.getItem("referralCode");
+      if(referral){
+        await fetchReferralStats(JSON.parse(referral));
+        setReferralCode(JSON.parse(referral))
+      }
+    }
+
+    handleLoad();
+  },[])
+
   const fetchReferralStats = async (code: string) => {
     if (!code) {
       toast({

@@ -14,7 +14,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { toast } from '@/hooks/use-toast';
 import { Copy, CheckCircle2, UserPlus } from 'lucide-react';
-import { registerAgent } from '../../account/api';
+import { getAgentLogin, registerAgent } from '../../account/api';
 
 export default function AgentRegistration() {
   const [email, setEmail] = useState('');
@@ -23,6 +23,7 @@ export default function AgentRegistration() {
   const [registered, setRegistered] = useState(false);
   const [referralCode, setReferralCode] = useState('');
   const [copied, setCopied] = useState(false);
+  const [isLogin, setIsLogin] = useState(false);
   const router = useRouter();
 
   // Function to generate unique referral code
@@ -88,6 +89,58 @@ export default function AgentRegistration() {
     }
   };
 
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!email || !referralCode) {
+      toast({
+        title: 'Missing Information',
+        description: 'Please provide both referral code  and email.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      toast({
+        title: 'Invalid Email',
+        description: 'Please enter a valid email address.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+
+      // TODO: Replace with actual API call
+      const response = await getAgentLogin(referralCode, email);
+
+      console.log('API Response:', response);
+      localStorage.setItem("referralCode", JSON.stringify(referralCode));
+      setReferralCode(response.referralCode);
+      setRegistered(true);
+
+      toast({
+        title: 'Login Successful!',
+        description: "You've succesfully logged In.",
+      });
+
+      router.replace("/agents/dashboard")
+    } catch (err: any) {
+      toast({
+        title: 'Login Failed',
+        description: err.message || 'Failed to register as agent',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleCopyCode = async () => {
     try {
       await navigator.clipboard.writeText(referralCode);
@@ -111,6 +164,84 @@ export default function AgentRegistration() {
       ? `${window.location.origin}/login?ref=${referralCode}`
       : '';
 
+      if(isLogin){
+        return (
+          <>
+          <div className="container mx-auto px-4 py-8 max-w-2xl">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <UserPlus className="h-5 w-5" />
+                  Welcome back Agent
+                </CardTitle>
+                <CardDescription>
+                  Fill in your details to proceed to your dashboard
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleLogin} className="space-y-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="referralCode">Referral code *</Label>
+                    <Input
+                      id="referralCode"
+                      type="text"
+                      placeholder="Enter your Referral Code"
+                      value={referralCode}
+                      onChange={(e) => setReferralCode(e.target.value)}
+                      required
+                      disabled={loading}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="email">Email Address *</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      placeholder="your.email@example.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                      disabled={loading}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Your referral code will be tied to this email
+                    </p>
+                  </div>
+
+                  <Button type="submit" className="w-full" disabled={loading}>
+                    {loading ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                        Logging in...
+                      </>
+                    ) : (
+                      'Login as Agent'
+                    )}
+                  </Button>
+                  
+                  <div className="flex justify-between mt-4 text-sm">
+                    <a href='#' type='button' onClick={()=> setIsLogin(false)} className="text-primary underline">
+                      Don't have an account? Register
+                    </a>
+                  </div>
+                </form>
+
+                <div className="mt-6 p-4 bg-muted rounded-lg">
+                  <h3 className="font-semibold mb-2">Benefits of Being an Agent:</h3>
+                  <ul className="space-y-1 text-sm text-muted-foreground">
+                    <li>• Get your unique referral code</li>
+                    <li>• Track users who sign up with your code</li>
+                    <li>• Monitor market purchases using your referral</li>
+                    <li>• Earn rewards based on referral activity</li>
+                  </ul>
+                </div>
+              </CardContent>
+            </Card>
+            </div>
+          </>
+        )
+      }
   return (
     <div className="container mx-auto px-4 py-8 max-w-2xl">
       <div className="mb-8 text-center">
@@ -172,6 +303,12 @@ export default function AgentRegistration() {
                   'Register as Agent'
                 )}
               </Button>
+
+              <div className="flex justify-between mt-4 text-sm">
+                <a href="#" type='button' onClick={()=> setIsLogin(true)} className="text-primary underline">
+                  Already have an account? Login
+                </a>
+              </div>
             </form>
 
             <div className="mt-6 p-4 bg-muted rounded-lg">
@@ -183,6 +320,7 @@ export default function AgentRegistration() {
                 <li>• Earn rewards based on referral activity</li>
               </ul>
             </div>
+
           </CardContent>
         </Card>
       ) : (
@@ -268,7 +406,7 @@ export default function AgentRegistration() {
               <Button
                 variant="outline"
                 className="flex-1"
-                onClick={() => router.push('/agent/dashboard')}
+                onClick={() => router.push('/agents/dashboard')}
               >
                 Go to Dashboard
               </Button>
