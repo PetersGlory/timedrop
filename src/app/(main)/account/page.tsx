@@ -616,7 +616,7 @@ export default function WalletPage() {
                   </span>
                 ) : (
                 )} */}
-                <>Kindly note: VAT fee attaached.</>
+                <>Note: VAT fee is attached.</>
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <Button className="w-full" onClick={handleDeposit} disabled={isLoading || loadingBalance}>
