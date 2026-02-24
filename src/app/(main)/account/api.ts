@@ -274,7 +274,7 @@ export async function placeReferralOrder(data: {
   marketId: string;
   orderAmount: number;
 }, token: string) {
-  return apiFetch('/orders/referral', {
+  return apiFetch('/referrals/track', {
     method: 'POST',
     body: JSON.stringify(data),
   }, token);

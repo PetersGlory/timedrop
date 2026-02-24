@@ -339,11 +339,13 @@ export default function MarketDetailClient({
 
       if(agentReferralCode && agentReferralCode.length > 0) {
         
-        await placeOrderWithReferralCode(orderData, token); 
+        const placeOrderResponse = await placeOrderWithReferralCode(orderData, token); 
         const placeOrderReferralData = {
           referralCode: agentReferralCode,
           marketId: market.id,
           orderAmount: tradeAmount,
+          orderType: orderData.type,
+          orderId: placeOrderResponse.data.order.id
         };
         await placeReferralOrder(placeOrderReferralData, token);
         
