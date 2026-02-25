@@ -183,7 +183,7 @@ export default function AgentDashboard() {
               </CardContent>
             </Card>
 
-            <Card>
+            {/* <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">
                   Total Volume
@@ -198,7 +198,7 @@ export default function AgentDashboard() {
                   Total trade volume
                 </p>
               </CardContent>
-            </Card>
+            </Card> */}
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
