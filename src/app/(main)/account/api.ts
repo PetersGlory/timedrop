@@ -258,8 +258,20 @@ export async function getAgent(referralCode: string) {
   return apiFetch(`/agents?referralCode=${encodeURIComponent(referralCode)}`, { method: 'GET' });
 }
 
-export async function getAgentLogin(referralCode: string, email: string) {
-  return apiFetch(`/agents?referralCode=${encodeURIComponent(referralCode)}&?email=${email}`, { method: 'GET' });
+export async function getAgentLogin(referralCode?: string, email?: string) {
+  const params = new URLSearchParams();
+
+  if (referralCode) {
+    params.append('referralCode', referralCode);
+  }
+
+  if (email) {
+    params.append('email', email);
+  }
+
+  return apiFetch(`/agents?${params.toString()}`, {
+    method: 'GET',
+  });
 }
 
 export async function trackReferralUsage(referralCode: string, token: string) {

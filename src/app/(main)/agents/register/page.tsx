@@ -71,7 +71,8 @@ export default function AgentRegistration() {
 
       console.log('API Response:', response);
 
-      setReferralCode(response.referralCode || newReferralCode);
+      setReferralCode(response.agent.referralCode || newReferralCode);
+      localStorage.setItem("referralCode", JSON.stringify(response.agent.referralCode));
       setRegistered(true);
 
       toast({
@@ -92,10 +93,10 @@ export default function AgentRegistration() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!email || !referralCode) {
+    if (!email) {
       toast({
         title: 'Missing Information',
-        description: 'Please provide both referral code  and email.',
+        description: 'Kindly provide your email.',
         variant: 'destructive',
       });
       return;
@@ -120,8 +121,8 @@ export default function AgentRegistration() {
       const response = await getAgentLogin(referralCode, email);
 
       console.log('API Response:', response);
-      localStorage.setItem("referralCode", JSON.stringify(referralCode));
-      setReferralCode(response.referralCode);
+      localStorage.setItem("referralCode", JSON.stringify(response.agent.referralCode));
+      setReferralCode(response.agent.referralCode);
       setRegistered(true);
 
       toast({
@@ -180,7 +181,7 @@ export default function AgentRegistration() {
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleLogin} className="space-y-6">
-                  <div className="space-y-2">
+                  {/* <div className="space-y-2">
                     <Label htmlFor="referralCode">Referral code *</Label>
                     <Input
                       id="referralCode"
@@ -191,7 +192,7 @@ export default function AgentRegistration() {
                       required
                       disabled={loading}
                     />
-                  </div>
+                  </div> */}
 
                   <div className="space-y-2">
                     <Label htmlFor="email">Email Address *</Label>
