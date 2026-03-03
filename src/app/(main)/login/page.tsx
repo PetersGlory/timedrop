@@ -274,7 +274,7 @@ export default function LoginPage() {
               onClick={() => setShowForgotPassword(true)}
               className="text-muted-foreground hover:text-primary hover:underline transition-colors"
             >
-              {/* Forgot password? */}
+              Forgot password?
             </button>
           </div>
         </div>
