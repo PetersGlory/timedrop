@@ -141,7 +141,7 @@ export default function LoginPage() {
     try {
       const response = await forgotPassword(forgotPasswordEmail.trim());
       
-      if (response.success) {
+      if (response.message === "Password reset email sent") {
         setForgotPasswordSuccess(true);
         toast({
           title: "Reset Link Sent",

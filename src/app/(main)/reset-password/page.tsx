@@ -149,7 +149,7 @@ export default function ResetPasswordPage() {
     try {
       const response = await resetPassword(token, newPassword);
       
-      if (response.success) {
+      if (response.message === 'Password reset successful.') {
         setSuccess(true);
         toast({
           title: 'Password Reset Successful',
