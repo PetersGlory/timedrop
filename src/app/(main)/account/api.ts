@@ -344,7 +344,7 @@ export async function getTransactionById(id: string, token: string) {
 export async function forgotPassword(userEmail: string) {
   return apiFetch('/auth/forgot-password', {
     method: 'POST',
-    body: JSON.stringify({ userEmail }),
+    body: JSON.stringify({ email: userEmail }),
   });
 }
 
