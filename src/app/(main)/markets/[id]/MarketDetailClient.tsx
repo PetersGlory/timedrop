@@ -26,7 +26,7 @@ import { getMarketById, getProfile, placeOrder, placeOrderWithReferralCode, plac
 import { useAuth } from '@/context/AuthContext';
 import { generateMarketHistory } from '@/lib/data';
 
-const TRADE_AMOUNTS = [1000, 5000, 10000, 50000, 100000];
+const TRADE_AMOUNTS = [1500, 5000, 10000, 50000, 100000];
 
 // Chart configuration
 const chartConfig = {
@@ -323,6 +323,15 @@ export default function MarketDetailClient({
       toast({
         title: 'Invalid Amount',
         description: 'Please enter a valid trade amount.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (tradeAmount <= 1500) {
+      toast({
+        title: 'Invalid Amount',
+        description: 'Kindly note that the minimum trade amount is 1500',
         variant: 'destructive',
       });
       return;
