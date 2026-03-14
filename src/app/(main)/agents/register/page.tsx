@@ -183,18 +183,6 @@ export default function AgentRegistration() {
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleLogin} className="space-y-6">
-                  <div className="space-y-2">
-                    <Label htmlFor="phone">Phone Number *</Label>
-                    <Input
-                      id="phone"
-                      type="text"
-                      placeholder="Enter your Phone Number"
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
-                      required
-                      disabled={loading}
-                    />
-                  </div>
 
                   <div className="space-y-2">
                     <Label htmlFor="email">Email Address *</Label>
@@ -275,6 +263,19 @@ export default function AgentRegistration() {
                   placeholder="Enter your full name"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
+                  required
+                  disabled={loading}
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="phone">Phone Number *</Label>
+                <Input
+                  id="phone"
+                  type="text"
+                  placeholder="Enter your Phone Number"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
                   required
                   disabled={loading}
                 />
