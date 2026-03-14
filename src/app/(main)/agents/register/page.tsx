@@ -18,6 +18,7 @@ import { getAgentLogin, registerAgent } from '../../account/api';
 
 export default function AgentRegistration() {
   const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
   const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);
   const [registered, setRegistered] = useState(false);
@@ -65,6 +66,7 @@ export default function AgentRegistration() {
       // TODO: Replace with actual API call
       const response = await registerAgent({
         name,
+        phone,
         email,
         referralCode: newReferralCode,
       });
@@ -181,18 +183,18 @@ export default function AgentRegistration() {
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleLogin} className="space-y-6">
-                  {/* <div className="space-y-2">
-                    <Label htmlFor="referralCode">Referral code *</Label>
+                  <div className="space-y-2">
+                    <Label htmlFor="phone">Phone Number *</Label>
                     <Input
-                      id="referralCode"
+                      id="phone"
                       type="text"
-                      placeholder="Enter your Referral Code"
-                      value={referralCode}
-                      onChange={(e) => setReferralCode(e.target.value)}
+                      placeholder="Enter your Phone Number"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
                       required
                       disabled={loading}
                     />
-                  </div> */}
+                  </div>
 
                   <div className="space-y-2">
                     <Label htmlFor="email">Email Address *</Label>
