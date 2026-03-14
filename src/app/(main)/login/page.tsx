@@ -57,8 +57,8 @@ export default function LoginPage() {
           try {
             setGoogleLoading(true);
             const res = await loginWithGoogle({
-              firstName: givenName ?? fullName,
-              lastName: familyName ?? fullName,
+              firstName: givenName ?? fullName ?? "Timedrop",
+              lastName: familyName ?? fullName ?? "User",
               email,
             });
             if (res && res.token) {
