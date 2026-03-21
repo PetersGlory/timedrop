@@ -142,12 +142,9 @@ export async function withdrawFunds(
 }
 
 export async function getBanks(token: string, country: string = "ng") {
-  // Explicitly set the Authorization header to ensure it's included
   return apiFetch(
     `/wallets/banks/${country}`,
-    {
-      method: 'GET'
-    },
+    { method: 'GET' },
     token
   );
 }
@@ -240,15 +237,35 @@ export async function placeOrderWithReferralCode(data: any, token: string) {
   }, token);
 }
 
-// Agents
+// --- Agents ---
 
-export async function registerAgent(data: any) {
+export async function registerAgent(data: {
+  name: string;
+  phone?: string;
+  email: string;
+  accountNumber?: string;
+  accountName?: string;
+  bankName?: string;
+}) {
   return apiFetch('/agents/register', {
     method: 'POST',
     body: JSON.stringify(data),
   });
 }
 
+export async function updateAgentBankDetails(
+  agentId: string,
+  data: {
+    accountNumber: string;
+    accountName: string;
+    bankName: string;
+  }
+) {
+  return apiFetch(`/agents/${agentId}/bank-details`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  });
+}
 
 export async function getAgentReferralCode(token: string) {
   return apiFetch('/agents/referral-code', { method: 'GET' }, token);

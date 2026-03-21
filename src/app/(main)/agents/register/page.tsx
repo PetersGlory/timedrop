@@ -12,14 +12,21 @@ import {
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
+import { Separator } from '@/components/ui/separator';
 import { toast } from '@/hooks/use-toast';
-import { Copy, CheckCircle2, UserPlus } from 'lucide-react';
+import { Copy, CheckCircle2, UserPlus, Landmark } from 'lucide-react';
 import { getAgentLogin, registerAgent } from '../../account/api';
 
 export default function AgentRegistration() {
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [name, setName] = useState('');
+
+  // Bank detail fields
+  const [accountNumber, setAccountNumber] = useState('');
+  const [accountName, setAccountName] = useState('');
+  const [bankName, setBankName] = useState('');
+
   const [loading, setLoading] = useState(false);
   const [registered, setRegistered] = useState(false);
   const [referralCode, setReferralCode] = useState('');
@@ -27,11 +34,20 @@ export default function AgentRegistration() {
   const [isLogin, setIsLogin] = useState(false);
   const router = useRouter();
 
-  // Function to generate unique referral code
-  const generateReferralCode = (email: string) => {
-    const emailPrefix = email.split('@')[0].substring(0, 4).toUpperCase();
-    const randomSuffix = Math.random().toString(36).substring(2, 8).toUpperCase();
-    return `${emailPrefix}${randomSuffix}`;
+  // Validate that if any bank field is filled, all three must be filled
+  const validateBankDetails = (): string | null => {
+    const filledFields = [accountNumber, accountName, bankName].filter(Boolean);
+    if (filledFields.length > 0 && filledFields.length < 3) {
+      const missing: string[] = [];
+      if (!accountNumber) missing.push('Account Number');
+      if (!accountName) missing.push('Account Name');
+      if (!bankName) missing.push('Bank Name');
+      return `Please fill in: ${missing.join(', ')}`;
+    }
+    if (accountNumber && !/^\d{6,20}$/.test(accountNumber)) {
+      return 'Account number must be 6–20 digits with no spaces or special characters.';
+    }
+    return null;
   };
 
   const handleRegistration = async (e: React.FormEvent) => {
@@ -46,7 +62,6 @@ export default function AgentRegistration() {
       return;
     }
 
-    // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       toast({
@@ -57,24 +72,41 @@ export default function AgentRegistration() {
       return;
     }
 
+    const bankError = validateBankDetails();
+    if (bankError) {
+      toast({
+        title: 'Invalid Bank Details',
+        description: bankError,
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setLoading(true);
 
     try {
-      // Generate referral code
-      const newReferralCode = generateReferralCode(email);
+      const payload: {
+        name: string;
+        phone: string;
+        email: string;
+        accountNumber?: string;
+        accountName?: string;
+        bankName?: string;
+      } = { name, phone, email };
 
-      // TODO: Replace with actual API call
-      const response = await registerAgent({
-        name,
-        phone,
-        email,
-        referralCode: newReferralCode,
-      });
+      // Only include bank details if all three are provided
+      if (accountNumber && accountName && bankName) {
+        payload.accountNumber = accountNumber;
+        payload.accountName = accountName;
+        payload.bankName = bankName;
+      }
+
+      const response = await registerAgent(payload);
 
       console.log('API Response:', response);
 
-      setReferralCode(response.agent.referralCode || newReferralCode);
-      localStorage.setItem("referralCode", JSON.stringify(response.agent.referralCode));
+      setReferralCode(response.agent.referralCode);
+      localStorage.setItem('referralCode', JSON.stringify(response.agent.referralCode));
       setRegistered(true);
 
       toast({
@@ -104,7 +136,6 @@ export default function AgentRegistration() {
       return;
     }
 
-    // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       toast({
@@ -118,25 +149,23 @@ export default function AgentRegistration() {
     setLoading(true);
 
     try {
-
-      // TODO: Replace with actual API call
       const response = await getAgentLogin(referralCode, email);
 
       console.log('API Response:', response);
-      localStorage.setItem("referralCode", JSON.stringify(response.agent.referralCode));
+      localStorage.setItem('referralCode', JSON.stringify(response.agent.referralCode));
       setReferralCode(response.agent.referralCode);
       setRegistered(true);
 
       toast({
         title: 'Login Successful!',
-        description: "You've succesfully logged In.",
+        description: "You've successfully logged in.",
       });
 
-      router.replace("/agents/dashboard")
+      router.replace('/agents/dashboard');
     } catch (err: any) {
       toast({
         title: 'Login Failed',
-        description: err.message || 'Failed to register as agent',
+        description: err.message || 'Failed to log in as agent',
         variant: 'destructive',
       });
     } finally {
@@ -167,72 +196,74 @@ export default function AgentRegistration() {
       ? `${window.location.origin}/login?ref=${referralCode}`
       : '';
 
-      if(isLogin){
-        return (
-          <>
-          <div className="container mx-auto px-4 py-8 max-w-2xl">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <UserPlus className="h-5 w-5" />
-                  Welcome back Agent
-                </CardTitle>
-                <CardDescription>
-                  Fill in your details to proceed to your dashboard
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={handleLogin} className="space-y-6">
+  if (isLogin) {
+    return (
+      <div className="container mx-auto px-4 py-8 max-w-2xl">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <UserPlus className="h-5 w-5" />
+              Welcome back Agent
+            </CardTitle>
+            <CardDescription>
+              Fill in your details to proceed to your dashboard
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleLogin} className="space-y-6">
+              <div className="space-y-2">
+                <Label htmlFor="email">Email Address *</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="your.email@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  disabled={loading}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Your referral code is tied to this email
+                </p>
+              </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="email">Email Address *</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      placeholder="your.email@example.com"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      required
-                      disabled={loading}
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      Your referral code will be tied to this email
-                    </p>
-                  </div>
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
+                    Logging in...
+                  </>
+                ) : (
+                  'Login as Agent'
+                )}
+              </Button>
 
-                  <Button type="submit" className="w-full" disabled={loading}>
-                    {loading ? (
-                      <>
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                        Logging in...
-                      </>
-                    ) : (
-                      'Login as Agent'
-                    )}
-                  </Button>
-                  
-                  <div className="flex justify-between mt-4 text-sm">
-                    <a href='#' type='button' onClick={()=> setIsLogin(false)} className="text-primary underline">
-                      Don't have an account? Register
-                    </a>
-                  </div>
-                </form>
+              <div className="flex justify-between mt-4 text-sm">
+                <a
+                  href="#"
+                  onClick={() => setIsLogin(false)}
+                  className="text-primary underline"
+                >
+                  Don't have an account? Register
+                </a>
+              </div>
+            </form>
 
-                <div className="mt-6 p-4 bg-muted rounded-lg">
-                  <h3 className="font-semibold mb-2">Benefits of Being an Agent:</h3>
-                  <ul className="space-y-1 text-sm text-muted-foreground">
-                    <li>• Get your unique referral code</li>
-                    <li>• Track users who sign up with your code</li>
-                    <li>• Monitor market purchases using your referral</li>
-                    <li>• Earn rewards based on referral activity</li>
-                  </ul>
-                </div>
-              </CardContent>
-            </Card>
+            <div className="mt-6 p-4 bg-muted rounded-lg">
+              <h3 className="font-semibold mb-2">Benefits of Being an Agent:</h3>
+              <ul className="space-y-1 text-sm text-muted-foreground">
+                <li>• Get your unique referral code</li>
+                <li>• Track users who sign up with your code</li>
+                <li>• Monitor market purchases using your referral</li>
+                <li>• Earn rewards based on referral activity</li>
+              </ul>
             </div>
-          </>
-        )
-      }
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="container mx-auto px-4 py-8 max-w-2xl">
       <div className="mb-8 text-center">
@@ -255,52 +286,116 @@ export default function AgentRegistration() {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleRegistration} className="space-y-6">
-              <div className="space-y-2">
-                <Label htmlFor="name">Full Name *</Label>
-                <Input
-                  id="name"
-                  type="text"
-                  placeholder="Enter your full name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  required
-                  disabled={loading}
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="phone">Phone Number *</Label>
-                <Input
-                  id="phone"
-                  type="text"
-                  placeholder="Enter your Phone Number"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  required
-                  disabled={loading}
-                />
+
+              {/* ── Personal Details ── */}
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="name">Full Name *</Label>
+                  <Input
+                    id="name"
+                    type="text"
+                    placeholder="Enter your full name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    required
+                    disabled={loading}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="phone">Phone Number</Label>
+                  <Input
+                    id="phone"
+                    type="text"
+                    placeholder="+2348012345678"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    disabled={loading}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email Address *</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="your.email@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    disabled={loading}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Your referral code will be tied to this email
+                  </p>
+                </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="email">Email Address *</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="your.email@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  disabled={loading}
-                />
-                <p className="text-xs text-muted-foreground">
-                  Your referral code will be tied to this email
-                </p>
+              <Separator />
+
+              {/* ── Bank Details ── */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-2">
+                  <Landmark className="h-4 w-4 text-muted-foreground" />
+                  <p className="text-sm font-medium">Bank Details</p>
+                  <span className="text-xs text-muted-foreground">(optional — for receiving payouts)</span>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="bankName">Bank Name</Label>
+                  <Input
+                    id="bankName"
+                    type="text"
+                    placeholder="e.g. First Bank, GTBank"
+                    value={bankName}
+                    onChange={(e) => setBankName(e.target.value)}
+                    disabled={loading}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="accountNumber">Account Number</Label>
+                  <Input
+                    id="accountNumber"
+                    type="text"
+                    inputMode="numeric"
+                    placeholder="10-digit account number"
+                    maxLength={20}
+                    value={accountNumber}
+                    onChange={(e) => {
+                      // Allow digits only
+                      const val = e.target.value.replace(/\D/g, '');
+                      setAccountNumber(val);
+                    }}
+                    disabled={loading}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="accountName">Account Name</Label>
+                  <Input
+                    id="accountName"
+                    type="text"
+                    placeholder="Name on bank account"
+                    value={accountName}
+                    onChange={(e) => setAccountName(e.target.value)}
+                    disabled={loading}
+                  />
+                </div>
+
+                {/* Partial-fill warning */}
+                {[accountNumber, accountName, bankName].some(Boolean) &&
+                  [accountNumber, accountName, bankName].some((v) => !v) && (
+                    <p className="text-xs text-destructive">
+                      Please fill in all three bank fields, or leave them all empty.
+                    </p>
+                  )}
               </div>
 
               <Button type="submit" className="w-full" disabled={loading}>
                 {loading ? (
                   <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
                     Registering...
                   </>
                 ) : (
@@ -309,7 +404,11 @@ export default function AgentRegistration() {
               </Button>
 
               <div className="flex justify-between mt-4 text-sm">
-                <a href="#" type='button' onClick={()=> setIsLogin(true)} className="text-primary underline">
+                <a
+                  href="#"
+                  onClick={() => setIsLogin(true)}
+                  className="text-primary underline"
+                >
                   Already have an account? Login
                 </a>
               </div>
@@ -324,7 +423,6 @@ export default function AgentRegistration() {
                 <li>• Earn rewards based on referral activity</li>
               </ul>
             </div>
-
           </CardContent>
         </Card>
       ) : (
@@ -334,9 +432,7 @@ export default function AgentRegistration() {
               <CheckCircle2 className="h-6 w-6" />
               Registration Successful!
             </CardTitle>
-            <CardDescription>
-              Your agent account has been created
-            </CardDescription>
+            <CardDescription>Your agent account has been created</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="space-y-4">
@@ -366,11 +462,7 @@ export default function AgentRegistration() {
               <div className="space-y-2">
                 <Label>Your Referral Link</Label>
                 <div className="flex gap-2">
-                  <Input
-                    value={referralLink}
-                    readOnly
-                    className="text-sm"
-                  />
+                  <Input value={referralLink} readOnly className="text-sm" />
                   <Button
                     variant="outline"
                     size="icon"
@@ -397,6 +489,20 @@ export default function AgentRegistration() {
               </div>
             </div>
 
+            {/* Show bank details summary if provided */}
+            {accountNumber && accountName && bankName && (
+              <div className="p-4 border rounded-lg space-y-1">
+                <div className="flex items-center gap-2 mb-2">
+                  <Landmark className="h-4 w-4 text-muted-foreground" />
+                  <p className="text-sm font-medium">Bank Details Saved</p>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  <span className="font-medium text-foreground">{bankName}</span> · {accountNumber}
+                </p>
+                <p className="text-sm text-muted-foreground">{accountName}</p>
+              </div>
+            )}
+
             <div className="p-4 bg-muted rounded-lg">
               <h3 className="font-semibold mb-2">Next Steps:</h3>
               <ul className="space-y-2 text-sm text-muted-foreground">
@@ -414,10 +520,7 @@ export default function AgentRegistration() {
               >
                 Go to Dashboard
               </Button>
-              <Button
-                className="flex-1"
-                onClick={() => router.push('/')}
-              >
+              <Button className="flex-1" onClick={() => router.push('/')}>
                 Back to Markets
               </Button>
             </div>
