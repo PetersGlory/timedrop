@@ -346,7 +346,7 @@ export default function AgentRegistration() {
                   <Input
                     id="bankName"
                     type="text"
-                    placeholder="e.g. First Bank, GTBank"
+                    placeholder="e.g. HSBC"
                     value={bankName}
                     onChange={(e) => setBankName(e.target.value)}
                     disabled={loading}

@@ -573,9 +573,9 @@ export default function MarketDetailClient({
                 <li>
                   Select an amount you want to trade.
                 </li>
-                <li>
+                {/* <li>
                   When an opposing order from another trader matches, a trade occurs.
-                </li>
+                </li> */}
                 <li>
                   If you are correct, you get your trade back plus your profit.
                 </li>

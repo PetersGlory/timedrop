@@ -100,7 +100,7 @@ export default function MainLayout({
                 <nav className="grid gap-6 p-6 text-lg font-medium">
                   <Link
                     href="/"
-                    className="mb-4 flex items-center gap-2 text-lg font-semibold"
+                    className="mb-4 flex items-center md:ml-4 lg:ml-4 gap-2 text-lg font-semibold"
                   >
                     <span className="font-display text-lg md:text-2xl font-bold tracking-tight text-primary">
                       timedrop
