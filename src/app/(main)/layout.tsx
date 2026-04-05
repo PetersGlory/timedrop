@@ -103,7 +103,7 @@ export default function MainLayout({
                     className="mb-4 flex items-center md:ml-4 lg:ml-4 gap-2 text-lg font-semibold"
                   >
                     <span className="font-display text-base md:pl-4 lg:pl-4 pl-0 md:text-2xl font-bold tracking-tight text-primary">
-                      timedrop
+                      <span className="md:flex hidden">{"   " + " "}</span>timedrop
                     </span>
                   </Link>
                   {navItems.map((item) => (
