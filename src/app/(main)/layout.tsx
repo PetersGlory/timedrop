@@ -125,8 +125,8 @@ export default function MainLayout({
             </Sheet>
           </div>
           <Link href="/" className="flex items-center gap-2">
-            <span className="font-display text-lg md:text-2xl lg:text-3xl font-bold tracking-tight text-primary pl-0 lg:pl-6 md:pl-6">
-              timedrop
+            <span className="flex font-display text-lg md:text-2xl lg:text-3xl font-bold tracking-tight text-primary pl-0 lg:pl-6 md:pl-6">
+              <br /> <br /> timedrop
             </span>
           </Link>
         </div>
