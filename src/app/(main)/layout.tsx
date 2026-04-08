@@ -102,7 +102,10 @@ export default function MainLayout({
                     href="/"
                     className="mb-4 flex items-center md:ml-4 lg:ml-4 gap-2 text-lg font-semibold"
                   >
-                    <span className="font-display text-base md:pl-4 lg:pl-4 pl-0 md:text-2xl font-bold tracking-tight text-primary">
+                    <span className="md:flex lg:flex hidden font-display text-base md:pl-4 lg:pl-4 px-10 pl-0 md:text-xl font-bold tracking-tight text-primary">
+                      <span className="md:flex hidden">{"   " + " "}</span>timedrop
+                    </span>
+                    <span className=" md:hidden flex lg:hidden font-display text-base md:pl-4 lg:pl-4 pl-0 md:text-2xl font-bold tracking-tight text-primary">
                       <span className="md:flex hidden">{"   " + " "}</span>timedrop
                     </span>
                   </Link>
