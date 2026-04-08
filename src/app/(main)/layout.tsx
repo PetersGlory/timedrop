@@ -102,11 +102,8 @@ export default function MainLayout({
                     href="/"
                     className="mb-4 flex items-center md:ml-4 lg:ml-4 gap-2 text-lg font-semibold"
                   >
-                    <span className="md:flex lg:flex hidden font-display text-base md:pl-4 lg:pl-4 px-10 pl-0 md:text-xl font-bold tracking-tight text-primary">
-                      <span className="md:flex hidden">{"   " + " "}</span><br />timedrop
-                    </span>
-                    <span className=" md:hidden flex lg:hidden font-display text-base md:pl-4 lg:pl-4 pl-0 md:text-2xl font-bold tracking-tight text-primary">
-                      <span className="md:flex hidden">{"   " + " "}</span>timedrop
+                    <span className="font-display text-base md:pl-4 lg:pl-4 pl-0 md:text-2xl font-bold tracking-tight text-primary">
+                      timedrop
                     </span>
                   </Link>
                   {navItems.map((item) => (
@@ -127,8 +124,8 @@ export default function MainLayout({
               </SheetContent>
             </Sheet>
           </div>
-          <Link href="/" className="flex items-center gap-2">
-            <span className="font-display text-4xl font-bold tracking-tight text-primary">
+          <Link href="/" className="flex items-center gap-2 pl-0 lg:pl-6 md:pl-6">
+            <span className="font-display text-lg md:text-2xl lg:text-3xl font-bold tracking-tight text-primary">
               timedrop
             </span>
           </Link>
